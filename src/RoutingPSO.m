@@ -54,6 +54,7 @@ end
 stats.initialBestCost = GlobalBest.Cost;
 BestCost = zeros(MaxIt,1);
 history.FE = zeros(MaxIt,1);
+history.Cost = zeros(MaxIt,1);
 history.Distance = zeros(MaxIt,1);
 history.Late = zeros(MaxIt,1);
 history.ObstacleViolation = zeros(MaxIt,1);
@@ -93,6 +94,7 @@ for it = 1:MaxIt
     end
     BestCost(it) = GlobalBest.Cost;
     history.FE(it) = nPop*(it+1);
+    history.Cost(it) = GlobalBest.Cost;
     history.Distance(it) = GlobalBest.Detail.distance;
     history.Late(it) = GlobalBest.Detail.totalLate;
     history.ObstacleViolation(it) = GlobalBest.Detail.totalObstacleViolation;

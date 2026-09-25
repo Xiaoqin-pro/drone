@@ -14,7 +14,6 @@ for i=1:nPop
     if i==1, pos=incumbentPosition; else, pos=rand(1,nVar); end
     particles(i).Position=pos; particles(i).Velocity=zeros(1,nVar);
     route=DecodePartial(pos,activeIDs,fixedIDs,fixedKeys,freeIDs); key=RouteKey(route); routeKeys{end+1,1}=key; %#ok<AGROW>
-    if i>1 && ~strcmp(previousKeys{i},key), routeChanges=routeChanges+1; end
     previousKeys{i}=key;
     [particles(i).Cost,particles(i).Detail]=EvaluateSchedule(route,model,cache); functionEvaluations=functionEvaluations+1;
     particles(i).Best.Position=pos; particles(i).Best.Cost=particles(i).Cost; particles(i).Best.Detail=particles(i).Detail;

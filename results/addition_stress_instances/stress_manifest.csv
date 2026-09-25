@@ -1,0 +1,16 @@
+stress_level,instance,scenario_seed,file_name,reference_cost
+Near,1,8101,stress_Near_01.mat,4201.28171280685
+Near,2,8102,stress_Near_02.mat,4201.28171280685
+Near,3,8103,stress_Near_03.mat,4201.28171280685
+Near,4,8104,stress_Near_04.mat,4201.28171280685
+Near,5,8105,stress_Near_05.mat,4201.28171280685
+Far,1,8201,stress_Far_01.mat,5613.80230968909
+Far,2,8202,stress_Far_02.mat,5613.80230968909
+Far,3,8203,stress_Far_03.mat,5613.80230968909
+Far,4,8204,stress_Far_04.mat,5613.80230968909
+Far,5,8205,stress_Far_05.mat,5613.80230968909
+Tight,1,8301,stress_Tight_01.mat,4201.28171280685
+Tight,2,8302,stress_Tight_02.mat,4201.28171280685
+Tight,3,8303,stress_Tight_03.mat,4201.28171280685
+Tight,4,8304,stress_Tight_04.mat,4201.28171280685
+Tight,5,8305,stress_Tight_05.mat,4201.28171280685

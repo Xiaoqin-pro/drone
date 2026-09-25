@@ -1,0 +1,7 @@
+level,instance,scenario_seed,attempt,file_name
+Mild,1,3101,1,accepted_Mild_01.mat
+Mild,2,3102,2,accepted_Mild_02.mat
+Moderate,1,3201,1,accepted_Moderate_01.mat
+Moderate,2,3202,2,accepted_Moderate_02.mat
+Severe,1,3301,1,accepted_Severe_01.mat
+Severe,2,3302,2,accepted_Severe_02.mat

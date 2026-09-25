@@ -1,0 +1,17 @@
+# MATLAB temporary and backup files
+*.asv
+*.m~
+*.bak
+*.bak_*
+*.autosave
+
+# Operating-system/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# MATLAB generated metadata
+matlab.prj
+
+# Keep experiment results and source files under version control.

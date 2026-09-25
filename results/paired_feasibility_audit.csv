@@ -1,0 +1,7 @@
+level,instance,scenario_seed,reference_found,reference_first_feasible_fe,reference_cost,initial_fe
+Mild,1,3001,1,2,4075.25039164747,1530
+Mild,2,3002,1,2,4075.25039164747,1530
+Moderate,1,3001,1,2,4075.25039164747,1530
+Moderate,2,3002,1,2,4075.25039164747,1530
+Severe,1,3001,1,2,4075.25039164747,1530
+Severe,2,3002,1,2,4075.25039164747,1530

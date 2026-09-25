@@ -1,4 +1,4 @@
-function AnalyzeFeaturePerformance
+﻿function AnalyzeFeaturePerformance
 %ANALYZEFEATUREPERFORMANCE 将事件特征与策略Gap合并，供机制诊断
 scriptDir=fileparts(mfilename('fullpath'));
 root=fileparts(scriptDir);
@@ -22,7 +22,7 @@ for f=1:numel(files)
             allRows{end+1,1}={dataset,level(r),data.instance(r), ...
                 data.strategy(r),data.budget(r),data.gap_to_bks(r), ...
                 ft.insertion_ratio,ft.mean_detour_ratio,ft.max_detour_ratio, ...
-                ft.min_slack,ft.critical_count,ft.n_add}; %#ok<AGROW>
+                ft.min_slack_after,ft.critical_count_after,ft.n_add}; %#ok<AGROW>
         end
     end
 end

@@ -159,11 +159,11 @@ end
 function slack = SlackForLevel(level)
 switch level
     case 'M1'
-        slack = 120;
+        slack = 80;
     case 'M2'
         slack = 80;
     case 'M4'
-        slack = 40;
+        slack = 80;
 end
 end
 

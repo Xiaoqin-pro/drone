@@ -1,4 +1,4 @@
-﻿function BuildAdditionStressSet
+function BuildAdditionStressSet
 %BUILDADDITIONSTRESSSET 构造新增订单冲击强度诊断实例
 %   用于检验Local Repair是否只在“近距离可行插入”场景中占优。
 
@@ -26,9 +26,11 @@ for levelIndex = 1:numel(levels)
         baseModel.cfg.silent = true;
         activeInitial = baseModel.customerIDs(:)';
         baseCache = BuildLegCache(baseModel,activeInitial,baseModel.homePosition);
+        scenarioState = rng;
         rng(860000,'twister');
         [baseSolution,~,~] = RoutingPSO(baseModel,baseCache,100,40, ...
             0.90,0.995,1.7,1.7,[]);
+        rng(scenarioState);
         state = ExecuteUntilEvent(baseSolution,baseModel,90);
         activeIDs = setdiff(activeInitial,state.completedIDs,'stable');
         model = baseModel;

@@ -8,6 +8,8 @@ fprintf('Current optimizer prototype:\n');
 fprintf('  BuildTSPTWBenchmark\n');
 fprintf('  ValidateTSPTWReferenceSolutions\n');
 fprintf('  RunTSPTWOptimizerPrototype\n');
+fprintf('  RunFixedBudgetAudit\n');
+fprintf('  RunTSPTWFeasibilityAudit\n');
 fprintf('Audit commands:\n');
 fprintf('  RunExactDynamicAudit\n');
 fprintf('  RunFeasibleConstructionAudit\n');

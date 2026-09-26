@@ -1,6 +1,6 @@
 function [bestRoute,bestDetail,stats] = DiscreteRouteSearch(initialRoute,instance,options,initialDetail)
 %DISCRETEROUTESEARCH 使用公平采样的离散邻域改善TSPTW路线
-%   mode支持：relocate、swap、2opt、mixed（full为mixed别名）。
+%   mode支持：relocate、feasibility、swap、2opt、mixed（full为mixed别名）。
 %   mixed模式在每轮把FE预算分散到三种算子，避免Relocate独占预算。
 
 if nargin<3 || isempty(options), options = struct(); end
@@ -33,7 +33,7 @@ stats.moves = strings(0,1);
 mode = lower(string(options.mode));
 if mode=="full", mode = "mixed"; end
 switch mode
-    case "relocate"
+    case {"relocate","feasibility"}
         operators = "relocate";
     case "swap"
         operators = "swap";
@@ -46,7 +46,7 @@ switch mode
 end
 
 while functionEvaluations<options.maxFE
-    [candidatePools,movePools] = BuildCandidatePools(bestRoute,operators);
+    [candidatePools,movePools] = BuildCandidatePools(bestRoute,operators,bestDetail,mode);
     nextIndex = ones(1,numel(operators));
     operatorOrder = randperm(numel(operators));
     passBestRoute = bestRoute;
@@ -96,14 +96,47 @@ end
 stats.functionEvaluations = functionEvaluations;
 end
 
-function [candidatePools,movePools] = BuildCandidatePools(route,operators)
+function [candidatePools,movePools] = BuildCandidatePools(route,operators,detail,mode)
 candidatePools = cell(1,numel(operators));
 movePools = cell(1,numel(operators));
 for k = 1:numel(operators)
-    [candidates,moves] = BuildNeighborhood(route,operators(k));
-    order = randperm(numel(candidates));
+    if mode=="feasibility" && operators(k)=="relocate"
+        [candidates,moves] = BuildFeasibilityRelocate(route,detail);
+        order = 1:numel(candidates);
+    else
+        [candidates,moves] = BuildNeighborhood(route,operators(k));
+        order = randperm(numel(candidates));
+    end
     candidatePools{k} = candidates(order);
     movePools{k} = moves(order);
+end
+end
+
+
+function [candidates,moves] = BuildFeasibilityRelocate(route,detail)
+route=route(:)'; n=numel(route); scores=zeros(1,n);
+if isfield(detail,'records') && ~isempty(detail.records)
+    suffix=zeros(size(detail.records,1),1);
+    for k=size(detail.records,1):-1:1
+        suffix(k)=detail.records(k,4);
+        if k<size(detail.records,1), suffix(k)=suffix(k)+suffix(k+1); end
+        idx=find(route==detail.records(k,1),1);
+        if ~isempty(idx)
+            scores(idx)=max(0,detail.records(k,4))+0.5*suffix(k)/max(n-k+1,1);
+        end
+    end
+end
+if max(scores)<=0, scores(:)=1; end
+[~,sourceOrder]=sort(scores,'descend');
+candidates=cell(0,1); moves=strings(0,1);
+for i=sourceOrder
+    remaining=route([1:i-1,i+1:n]);
+    for j=randperm(numel(remaining)+1)
+        candidate=[remaining(1:j-1),route(i),remaining(j:end)];
+        if isequal(candidate,route), continue; end
+        candidates{end+1,1}=candidate; %#ok<AGROW>
+        moves(end+1,1)="feasibility-relocate("+i+","+j+")"; %#ok<AGROW>
+    end
 end
 end
 

@@ -197,6 +197,35 @@ results/adaptive_memetic_prototype_curves.png
 
 这一版是优化器机制原型。当前动态UAV结果用于验证机制，后续还需要在标准TSPTW/VRPTW基准上进行独立算法验证、增加强组合优化基线和统计检验。
 
+## 优化器机制校准实验
+
+当前已经加入两类机制门槛实验：
+
+```matlab
+RunFixedBudgetAudit
+RunTSPTWFeasibilityAudit
+```
+
+`RunFixedBudgetAudit` 比较统一固定局部搜索深度 `5/15/25/35/40` 与 Adaptive，检查自适应预算是否真的优于“固定多做一些Relocate”。
+
+`RunTSPTWFeasibilityAudit` 在没有Warm-start可行旧计划的标准TSPTW实例上，比较：
+
+```text
+Random-key PSO
+PSO + GlobalRelocate
+PSO + FeasibilityRelocate
+```
+
+重点指标是：
+
+```text
+FeasibleRate
+FirstFeasibleFE
+TotalLate
+```
+
+当前这两组实验用于决定哪些机制能够进入最终Proposed，而不是直接制造更多算法组件。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

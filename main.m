@@ -12,6 +12,7 @@ fprintf('  RunFixedBudgetAudit\n');
 fprintf('  RunTSPTWFeasibilityAudit\n');
 fprintf('  RunSourceSelectionAudit\n');
 fprintf('  RunStateSwitchForkAudit\n');
+fprintf('  RunFeasibleSourceOracleAudit\n');
 fprintf('Audit commands:\n');
 fprintf('  RunExactDynamicAudit\n');
 fprintf('  RunFeasibleConstructionAudit\n');

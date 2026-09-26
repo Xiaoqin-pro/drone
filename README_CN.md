@@ -307,6 +307,24 @@ StateSwitch + Feedback
 
 当前结果用于机制筛选。若Feedback不能在相同FE下稳定优于不带Feedback的对应方法，则不将其保留为Proposed核心，仅作为负结果和补充分析。
 
+## Feasible Source Oracle Audit
+
+新增机制诊断实验：
+
+```matlab
+RunFeasibleSourceOracleAudit
+```
+
+该实验不改变Proposed算法，而是对同一条可行路线离线完整评价每个source customer的reinsertion neighborhood，得到oracle-best source，再比较Random和RemovalSaving等简单source规则的：
+
+```text
+Oracle rank
+Normalized regret
+可行路线质量改善
+```
+
+该实验用于判断可行状态下是否存在稳定的quality-oriented source information，避免直接凭直觉设计第二个状态机制。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

@@ -1,0 +1,17 @@
+instance,route_index,route_source,route_cost,rule,selected_source,oracle_source,oracle_rank,selected_cost,oracle_cost,normalized_regret,improves_route
+rc_201.1,1,reference,444.5425,Random,17,15,10,444.5425,444.5425,0,0
+rc_201.1,1,reference,444.5425,RemovalSaving,13,15,17,444.5425,444.5425,0,0
+rc_201.1,2,state-switch,482.8134,Random,6,15,5,482.8134,482.8134,0,0
+rc_201.1,2,state-switch,482.8134,RemovalSaving,13,15,14,482.8134,482.8134,0,0
+rc_201.1,3,state-switch,449.893,Random,15,11,2,449.893,445.8462,0.00907667262836368,0
+rc_201.1,3,state-switch,449.893,RemovalSaving,13,11,16,449.893,445.8462,0.00907667262836368,0
+rc_201.1,4,state-switch,445.3805,Random,5,15,7,445.3805,445.3805,0,0
+rc_201.1,4,state-switch,445.3805,RemovalSaving,13,15,17,445.3805,445.3805,0,0
+rc_201.3,1,reference,790.6069,Random,8,13,13,790.6069,790.6069,0,0
+rc_201.3,1,reference,790.6069,RemovalSaving,22,13,29,790.6069,790.6069,0,0
+rc_201.3,2,state-switch,830.3083,Random,30,2,24,830.3083,808.162,0.0274032929041455,0
+rc_201.3,2,state-switch,830.3083,RemovalSaving,22,2,2,819.8276,808.162,0.0144347296705363,1
+rc_201.3,3,state-switch,801.747,Random,6,9,5,801.747,796.9798,0.00598158196732214,0
+rc_201.3,3,state-switch,801.747,RemovalSaving,22,9,29,801.747,796.9798,0.00598158196732214,0
+rc_204.1,1,reference,878.64017,Random,7,41,31,878.64017,878.64017,0,0
+rc_204.1,1,reference,878.64017,RemovalSaving,46,41,45,878.64017,878.64017,0,0

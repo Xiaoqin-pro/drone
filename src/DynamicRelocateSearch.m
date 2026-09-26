@@ -80,7 +80,7 @@ function [sourceOrder,sourceScores]=BuildSourceOrder(route,options)
 n=numel(route);
 sourceScores=zeros(1,n);
 mode=lower(string(options.mode));
-if mode=="impact-relocate"
+if mode=="impact-relocate" || mode=="feasibility-relocate"
     for k=1:n
         idx=find(options.impactIDs==route(k),1);
         if ~isempty(idx) && idx<=numel(options.impactScores)
@@ -100,3 +100,4 @@ else
 end
 sourceScores=sourceScores(sourceOrder);
 end
+

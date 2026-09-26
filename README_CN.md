@@ -147,6 +147,56 @@ results/impact_guided_relocate_curves.png
 
 `BuildPreEventSolution.m`用于重建动态基准生成时的事件前旧计划，保证事件状态、旧路线和重规划算法使用同一历史计划。
 
+## 面向优化算法论文的 Adaptive Memetic PSO 原型
+
+当前主线进一步抽象为两个算法机制：
+
+```text
+Feasibility-State Adaptive Search
+Adaptive FE Allocation
+```
+
+新增：
+
+```text
+src/AdaptiveMemeticRoutingPSO.m
+experiments/RunAdaptiveMemeticPrototype.m
+```
+
+算法根据当前全局最优解状态自动切换：
+
+```text
+不可行：Feasibility-Restoration Relocate
+可行：Quality-Intensification Relocate
+```
+
+同时根据最近单位FE的PSO收益和Relocate收益，动态决定下一轮局部搜索预算，不再固定每轮25个Relocate FE。
+
+原型实验比较：
+
+```text
+Repair
+WarmPSO
+WarmPSO + FixedRelocate
+AdaptiveMemeticPSO
+```
+
+运行：
+
+```matlab
+RunAdaptiveMemeticPrototype
+```
+
+结果：
+
+```text
+results/adaptive_memetic_prototype_summary.csv
+results/adaptive_memetic_prototype_result.mat
+results/adaptive_memetic_prototype_curves.png
+```
+
+这一版是优化器机制原型。当前动态UAV结果用于验证机制，后续还需要在标准TSPTW/VRPTW基准上进行独立算法验证、增加强组合优化基线和统计检验。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

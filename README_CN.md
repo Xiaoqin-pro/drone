@@ -226,6 +226,25 @@ TotalLate
 
 当前这两组实验用于决定哪些机制能够进入最终Proposed，而不是直接制造更多算法组件。
 
+## 规模一致的 Source-wise Relocate
+
+TSPTW局部搜索现在把一次Relocate动作定义为：
+
+```text
+选择一个source customer
+→ 完整评价该客户的所有reinsertion positions
+```
+
+Global、LateOnly和Propagation三种模式只改变source customer的选择顺序，不改变单个source的邻域大小。这样不同客户规模下的局部搜索强度更一致。
+
+Propagation模式使用：
+
+```text
+当前客户迟到量 + 后缀迟到传播分数
+```
+
+用于优先选择时间窗传播影响较大的客户。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

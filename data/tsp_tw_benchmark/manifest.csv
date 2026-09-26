@@ -1,0 +1,4 @@
+name,file,nNodes,nCustomers,sourceFile,source
+rc_201.1,rc_201.1.txt,20,19,data\tsp_tw_raw\SolomonPotvinBengio\rc_201.1.txt,Solomon-Potvin-Bengio
+rc_201.3,rc_201.3.txt,32,31,data\tsp_tw_raw\SolomonPotvinBengio\rc_201.3.txt,Solomon-Potvin-Bengio
+rc_204.1,rc_204.1.txt,46,45,data\tsp_tw_raw\SolomonPotvinBengio\rc_204.1.txt,Solomon-Potvin-Bengio

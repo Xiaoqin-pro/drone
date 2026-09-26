@@ -31,6 +31,7 @@ RunThreeStrategyBenchmark
 
 ```matlab
 BuildTSPTWBenchmark
+ValidateTSPTWReferenceSolutions
 RunTSPTWOptimizerPrototype
 ```
 
@@ -40,7 +41,9 @@ RunTSPTWOptimizerPrototype
 
 ```text
 ReadTSPTWInstance       读取距离矩阵和时间窗
-EvaluateTSPTWRoute      计算距离、等待、迟到和惩罚适应度
+EvaluateTSPTWRoute      计算旅行代价、等待、迟到和惩罚适应度
+ReadTSPTWReferenceSolutions 读取官方参考路线
+ValidateTSPTWReferenceSolutions 校准读取器和评价器
 RandomKeyTSPTWPSO       Random-key PSO 基线
 DiscreteRouteSearch     Relocate / Swap / 2-opt 离散邻域
 ```
@@ -50,7 +53,9 @@ DiscreteRouteSearch     Relocate / Swap / 2-opt 离散邻域
 ```text
 Random-key PSO
 PSO + Relocate
-PSO + Relocate + Swap + 2-opt
+PSO + Swap
+PSO + 2-opt
+PSO + Mixed
 ```
 
 开发数据位于：
@@ -73,6 +78,8 @@ results/tsptw_optimizer_prototype_anytime.png
 ```text
 问题特定的离散邻域，能否在相同FE预算下改善Random-key PSO的组合搜索质量？
 ```
+
+当前原型已经加入可行性优先比较，并对 Relocate、Swap、2-opt 和 Mixed 做公平FE消融。官方参考路线校验结果保存在 `results/tsptw_reference_validation.csv`。
 
 静态 TSPTW 原型验证通过后，再把同一套离散搜索机制接回动态订单和三维 UAV 验证场景。
 

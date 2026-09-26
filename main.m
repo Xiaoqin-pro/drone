@@ -6,6 +6,7 @@ fprintf('Dynamic baseline:\n');
 fprintf('  RunThreeStrategyBenchmark\n');
 fprintf('Current optimizer prototype:\n');
 fprintf('  BuildTSPTWBenchmark\n');
+fprintf('  ValidateTSPTWReferenceSolutions\n');
 fprintf('  RunTSPTWOptimizerPrototype\n');
 fprintf('Audit commands:\n');
 fprintf('  RunExactDynamicAudit\n');

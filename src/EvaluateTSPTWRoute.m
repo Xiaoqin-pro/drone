@@ -49,6 +49,7 @@ waitPenalty = options.waitPenalty*totalWaiting;
 cost = totalDistance+latePenalty+waitPenalty;
 
 detail.cost = cost;
+detail.tourCost = totalDistance;
 detail.route = route;
 detail.distance = totalDistance;
 detail.totalLate = totalLate;
@@ -60,4 +61,5 @@ detail.isFeasible = detail.isTimeFeasible;
 detail.latePenalty = latePenalty;
 detail.waitPenalty = waitPenalty;
 end
+
 

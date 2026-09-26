@@ -2,29 +2,23 @@ function [BestSol,history,stats] = RandomKeyTSPTWPSO(instance,options,initialPos
 %RANDOMKEYTSPTWPSO Random-key PSO基线及离散邻域增强版本
 %   localSearchMode='none'     ：纯Random-key PSO
 %   localSearchMode='relocate' ：PSO每代后追加Relocate搜索
-%   localSearchMode='full'     ：PSO每代后追加Relocate、Swap、2-opt搜索
+%   localSearchMode='swap'     ：PSO每代后追加Swap搜索
+%   localSearchMode='2opt'     ：PSO每代后追加2-opt搜索
+%   localSearchMode='mixed'    ：三种离散算子公平混合采样
 %
-%   所有路线评价均计入maxFE，三种方法可以在相同FE预算下比较。
+%   适应度更新采用可行性优先规则：先比较totalLate，再比较tourCost。
+%   所有路线评价均计入maxFE，便于公平比较。
 
-if nargin<2 || isempty(options)
-    options = struct();
-end
-if nargin<3
-    initialPositions = [];
-end
-
+if nargin<2 || isempty(options), options = struct(); end
+if nargin<3, initialPositions = []; end
 options = FillOptions(options,instance);
 nVar = instance.nCustomers;
 nPop = min(options.nPop,max(1,floor(options.maxFE)));
-if nPop<2
-    nPop = 1;
-end
 
 VarMin = zeros(1,nVar);
 VarMax = ones(1,nVar);
 VelMax = options.velocityRatio*(VarMax-VarMin);
 VelMin = -VelMax;
-
 empty.Position = [];
 empty.Velocity = [];
 empty.Cost = inf;
@@ -37,6 +31,7 @@ GlobalBest.Cost = inf;
 GlobalBest.Position = [];
 GlobalBest.Detail = [];
 functionEvaluations = 0;
+firstFeasibleFE = inf;
 
 for i = 1:nPop
     if ~isempty(initialPositions) && i<=size(initialPositions,1)
@@ -50,29 +45,38 @@ for i = 1:nPop
     [particle(i).Cost,particle(i).Detail] = ...
         EvaluateTSPTWRoute(route,instance,options);
     functionEvaluations = functionEvaluations+1;
+    if isinf(firstFeasibleFE) && particle(i).Detail.isFeasible
+        firstFeasibleFE = functionEvaluations;
+    end
     particle(i).Best.Position = particle(i).Position;
     particle(i).Best.Cost = particle(i).Cost;
     particle(i).Best.Detail = particle(i).Detail;
-    if particle(i).Cost<GlobalBest.Cost
+    if IsBetterSolution(particle(i).Cost,particle(i).Detail, ...
+            GlobalBest.Cost,GlobalBest.Detail)
         GlobalBest = particle(i).Best;
     end
 end
 
 history.FE = zeros(0,1);
 history.Cost = zeros(0,1);
+history.TourCost = zeros(0,1);
 history.Distance = zeros(0,1);
 history.Late = zeros(0,1);
 history.IsFeasible = false(0,1);
 history.LocalSearchFE = zeros(0,1);
+history.LocalSearchRelocateFE = zeros(0,1);
+history.LocalSearchSwapFE = zeros(0,1);
+history.LocalSearchTwoOptFE = zeros(0,1);
 localSearchFE = 0;
+localSearchRelocateFE = 0;
+localSearchSwapFE = 0;
+localSearchTwoOptFE = 0;
 iteration = 0;
 
 while functionEvaluations<options.maxFE
     iteration = iteration+1;
     for i = 1:nPop
-        if functionEvaluations>=options.maxFE
-            break;
-        end
+        if functionEvaluations>=options.maxFE, break; end
         particle(i).Velocity = options.w*particle(i).Velocity ...
             + options.c1*rand(1,nVar).*(particle(i).Best.Position ...
             -particle(i).Position) ...
@@ -81,16 +85,20 @@ while functionEvaluations<options.maxFE
         particle(i).Velocity = max(VelMin,min(VelMax,particle(i).Velocity));
         particle(i).Position = particle(i).Position+particle(i).Velocity;
         particle(i).Position = max(VarMin,min(VarMax,particle(i).Position));
-
         route = DecodeRoute(particle(i).Position,instance.customerIDs);
         [particle(i).Cost,particle(i).Detail] = ...
             EvaluateTSPTWRoute(route,instance,options);
         functionEvaluations = functionEvaluations+1;
-        if particle(i).Cost<particle(i).Best.Cost
+        if isinf(firstFeasibleFE) && particle(i).Detail.isFeasible
+            firstFeasibleFE = functionEvaluations;
+        end
+        if IsBetterSolution(particle(i).Cost,particle(i).Detail, ...
+                particle(i).Best.Cost,particle(i).Best.Detail)
             particle(i).Best.Position = particle(i).Position;
             particle(i).Best.Cost = particle(i).Cost;
             particle(i).Best.Detail = particle(i).Detail;
-            if particle(i).Best.Cost<GlobalBest.Cost
+            if IsBetterSolution(particle(i).Best.Cost,particle(i).Best.Detail, ...
+                    GlobalBest.Cost,GlobalBest.Detail)
                 GlobalBest = particle(i).Best;
             end
         end
@@ -99,37 +107,52 @@ while functionEvaluations<options.maxFE
     if options.localSearchFE>0 && functionEvaluations<options.maxFE ...
             && mod(iteration,options.localSearchEvery)==0
         remaining = options.maxFE-functionEvaluations;
-        budget = min(options.localSearchFE,remaining);
         searchOptions = options;
         searchOptions.mode = options.localSearchMode;
-        searchOptions.maxFE = budget;
+        searchOptions.maxFE = min(options.localSearchFE,remaining);
         [candidateRoute,candidateDetail,searchStats] = ...
             DiscreteRouteSearch(GlobalBest.Detail.route,instance, ...
             searchOptions,GlobalBest.Detail);
         functionEvaluations = functionEvaluations+searchStats.functionEvaluations;
         localSearchFE = localSearchFE+searchStats.functionEvaluations;
-        if candidateDetail.cost<GlobalBest.Cost
+        localSearchRelocateFE = localSearchRelocateFE+searchStats.relocateFE;
+        localSearchSwapFE = localSearchSwapFE+searchStats.swapFE;
+        localSearchTwoOptFE = localSearchTwoOptFE+searchStats.twoOptFE;
+        if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
+                GlobalBest.Cost,GlobalBest.Detail)
             GlobalBest.Route = candidateRoute;
             GlobalBest.Detail = candidateDetail;
             GlobalBest.Cost = candidateDetail.cost;
             GlobalBest.Position = RouteToKeys(candidateRoute,instance.customerIDs);
+            if candidateDetail.isFeasible && isinf(firstFeasibleFE)
+                firstFeasibleFE = functionEvaluations;
+            end
         end
     end
 
     history.FE(end+1,1) = functionEvaluations;
     history.Cost(end+1,1) = GlobalBest.Cost;
-    history.Distance(end+1,1) = GlobalBest.Detail.distance;
+    history.TourCost(end+1,1) = GlobalBest.Detail.tourCost;
+    history.Distance(end+1,1) = GlobalBest.Detail.tourCost;
     history.Late(end+1,1) = GlobalBest.Detail.totalLate;
     history.IsFeasible(end+1,1) = GlobalBest.Detail.isFeasible;
     history.LocalSearchFE(end+1,1) = localSearchFE;
+    history.LocalSearchRelocateFE(end+1,1) = localSearchRelocateFE;
+    history.LocalSearchSwapFE(end+1,1) = localSearchSwapFE;
+    history.LocalSearchTwoOptFE(end+1,1) = localSearchTwoOptFE;
     options.w = options.w*options.wdamp;
 end
 
 BestSol = GlobalBest;
 BestSol.Route = GlobalBest.Detail.route;
+BestSol.TourCost = GlobalBest.Detail.tourCost;
 stats.functionEvaluations = functionEvaluations;
 stats.iterations = iteration;
+stats.firstFeasibleFE = firstFeasibleFE;
 stats.localSearchFE = localSearchFE;
+stats.localSearchRelocateFE = localSearchRelocateFE;
+stats.localSearchSwapFE = localSearchSwapFE;
+stats.localSearchTwoOptFE = localSearchTwoOptFE;
 stats.localSearchMode = string(options.localSearchMode);
 stats.initialPopulation = nPop;
 end
@@ -155,7 +178,6 @@ end
 end
 
 function position = RouteToKeys(route,customerIDs)
-% 将离散路线映射回一组严格递增的random-key，便于记录而非参与评价。
 position = zeros(1,numel(customerIDs));
 for k = 1:numel(route)
     idx = find(customerIDs==route(k),1);
@@ -163,3 +185,16 @@ for k = 1:numel(route)
 end
 end
 
+function tf = IsBetterSolution(candidateCost,candidateDetail,bestCost,bestDetail)
+if isempty(bestDetail)
+    tf = true;
+    return;
+end
+if candidateDetail.totalLate<bestDetail.totalLate-1e-10
+    tf = true;
+elseif abs(candidateDetail.totalLate-bestDetail.totalLate)<=1e-10
+    tf = candidateDetail.tourCost<bestDetail.tourCost-1e-10;
+else
+    tf = false;
+end
+end

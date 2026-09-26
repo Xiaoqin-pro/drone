@@ -1,4 +1,4 @@
-source,customer_count,active_count,hidden_count,event_time,pre_event_feasible,reveal_before_due,post_event_witness_feasible,pre_event_cost,post_event_cost,pre_route_length,post_route_length
-c101,9,7,2,400.4,1,1,1,2300.77846048947,1257.57846048947,7,4
-r101,7,6,1,63.5497311789105,1,1,1,954.83141822623,631.075891565391,6,4
-rc101,5,4,1,74.5533650735242,1,1,1,1408.83910550358,912.739701431448,4,3
+source,customer_count,active_count,hidden_count,event_time,pre_event_feasible,reveal_before_due,hidden_in_post_route,post_event_witness_feasible,pre_event_cost,post_event_cost,pre_route_length,post_route_length
+c101,9,6,2,400.4,1,1,1,1,2300.77846048947,1643.17023402092,7,6
+r101,7,5,1,63.5497311789105,1,1,1,1,954.83141822623,689.431873009063,6,5
+rc101,5,4,1,74.5533650735242,1,1,1,1,1408.83910550358,958.270803060634,4,4

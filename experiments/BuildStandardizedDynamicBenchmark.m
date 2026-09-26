@@ -1,4 +1,4 @@
-function BuildStandardizedDynamicBenchmark
+﻿function BuildStandardizedDynamicBenchmark
 %BUILDSTANDARDIZEDDYNAMICBENCHMARK 生成可行的标准Solomon单UAV动态子实例
 scriptDir=fileparts(mfilename('fullpath')); root=fileparts(scriptDir);
 rawDir=fullfile(root,'data','solomon_raw','selected'); outDir=fullfile(root,'data','standardized_dynamic');
@@ -13,7 +13,7 @@ for s=1:numel(names)
     for q=1:numel(sourceRoute), localRoute(q)=find(selectedRows==sourceRoute(q),1); end
     hiddenCount=max(1,round(n*revealFraction));
     [hiddenIDs,eventTime,state,preActiveRoute,postRoute,preDetail,postDetail]=FindFeasibleReveal(model,localRoute,hiddenCount);
-    activeIDs=setdiff(model.customerIDs,hiddenIDs,'stable');
+    activeIDs=setdiff(model.customerIDs,state.completedIDs,'stable');
     event.time=eventTime; event.type='add'; event.customerIDs=hiddenIDs;
     for k=1:numel(hiddenIDs)
         id=hiddenIDs(k); event.customers(k).id=id; event.customers(k).xy=model.customerXY(id,:); event.customers(k).window=model.windows(id,:); event.customers(k).service=model.service(id);

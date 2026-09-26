@@ -83,6 +83,41 @@ results/tsptw_optimizer_prototype_anytime.png
 
 静态 TSPTW 原型验证通过后，再把同一套离散搜索机制接回动态订单和三维 UAV 验证场景。
 
+## 动态三维主线原型
+
+当前已把 Relocate 接回原来的三维动态无人机链条，新增：
+
+```text
+src/DynamicRelocateSearch.m
+experiments/RunDynamicMemeticPrototype.m
+```
+
+动态原型只比较三种方法：
+
+```text
+Repair
+WarmPSO
+WarmPSO + Relocate
+```
+
+Relocate 的每次候选路线评价都重新调用 `EvaluateSchedule`，因此会重新计算三维安全航段、飞行距离、到达时间、时间窗迟到和障碍物约束。当前原型使用8个代表性动态实例、10个配对种子和500/1000/1500/2500严格FE检查点。
+
+运行：
+
+```matlab
+RunDynamicMemeticPrototype
+```
+
+结果：
+
+```text
+results/dynamic_memetic_prototype_summary.csv
+results/dynamic_memetic_prototype_result.mat
+results/dynamic_memetic_prototype_curves.png
+```
+
+这一版仍是主线回归验证，不是最终自适应算法。下一步再将 `ComputeImpactProfile` 接入 Relocate 的客户采样优先级，比较全局Relocate和Impact-guided Relocate。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

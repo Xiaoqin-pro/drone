@@ -58,6 +58,7 @@ cost = totalDistance ...
     + model.obstaclePenalty*totalObstacleViolation ...
     + model.smoothPenalty*smoothness;
 
+detail.cost = cost;
 detail.routeIDs = routeIDs;
 detail.pathPoints = pathPoints;
 detail.routeLegs = routeLegs;
@@ -75,3 +76,4 @@ detail.isSafetyFeasible = detail.totalViolation<=1e-9;
 detail.isTimeFeasible = detail.totalLate<=1e-9;
 detail.isFeasible = detail.isSafetyFeasible && detail.isTimeFeasible;
 end
+

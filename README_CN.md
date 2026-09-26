@@ -356,6 +356,27 @@ waiting
 
 这些结果用于先诊断可行状态下是否存在可利用的quality-oriented source information，再决定是否设计新的source规则。
 
+## Feasible Source Feature Audit V1
+
+新增：
+
+```matlab
+RunFeasibleSourceFeatureAudit
+```
+
+该实验以路线为统计单位，而不是把所有source行错误地当作独立样本。对每条actionable feasible route分别计算：
+
+```text
+RemovalSaving
+Slack
+Waiting
+LocalTravel
+```
+
+并报告route-wise Spearman、Oracle hit、Top-3、normalized rank和gain capture。
+
+Feature Audit只用于决定可行状态下是否存在稳定quality-oriented source信息，不直接引入新的算法公式。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

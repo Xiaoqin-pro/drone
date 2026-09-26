@@ -35,10 +35,14 @@ for id=oldIDs
         'slackLoss',max(0,before-after),'neighbor',neighbor); %#ok<AGROW>
 end
 if isempty(records)
+    score=zeros(1,0);
     rankedOld=[];
+    rankedScores=[];
 else
     score=[records.pressure]+0.25*[records.neighbor];
-    [~,order]=sort(score,'descend'); rankedOld=[records(order).id];
+    [~,order]=sort(score,'descend');
+    rankedOld=[records(order).id];
+    rankedScores=score(order);
 end
 profile.oldRoute=oldRoute;
 profile.repairRoute=repairRoute;
@@ -46,7 +50,10 @@ profile.oldCost=oldCost;
 profile.repairCost=repairCost;
 profile.records=records;
 profile.rankedOldIDs=rankedOld;
+profile.rankedOldScores=rankedScores;
 profile.eventIDs=intersect(eventIDs,activeIDs,'stable');
+profile.impactIDs=[profile.eventIDs,profile.rankedOldIDs];
+profile.impactScores=[repmat(max([rankedScores,1]),1,numel(profile.eventIDs)),rankedScores];
 profile.preprocessFE=preprocessFE;
 profile.affectedIDs=unique([profile.eventIDs,rankedOld],'stable');
 end

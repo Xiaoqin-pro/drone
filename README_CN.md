@@ -118,6 +118,35 @@ results/dynamic_memetic_prototype_curves.png
 
 这一版仍是主线回归验证，不是最终自适应算法。下一步再将 `ComputeImpactProfile` 接入 Relocate 的客户采样优先级，比较全局Relocate和Impact-guided Relocate。
 
+## Impact-guided Relocate 原型
+
+在动态三维主线中，新增了全局Relocate与事件影响引导Relocate的对照实验：
+
+```matlab
+RunImpactGuidedRelocatePrototype
+```
+
+比较方法：
+
+```text
+Repair
+WarmPSO
+WarmPSO + GlobalRelocate
+WarmPSO + ImpactRelocate
+```
+
+影响引导不会冻结低影响客户，而是根据 `ComputeImpactProfile` 对Relocate源客户进行加权抽样；影响画像的评价FE会计入总预算。当前结果仍属于机制原型，不直接作为最终论文结果。
+
+输出：
+
+```text
+results/impact_guided_relocate_summary.csv
+results/impact_guided_relocate_result.mat
+results/impact_guided_relocate_curves.png
+```
+
+`BuildPreEventSolution.m`用于重建动态基准生成时的事件前旧计划，保证事件状态、旧路线和重规划算法使用同一历史计划。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

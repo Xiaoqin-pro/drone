@@ -22,6 +22,7 @@ switch lower(changeType)
             end
             bestRoute = [];
             bestCost = inf;
+            bestDetail = [];
             candidateCount = numel(route)+1;
             for position = 1:candidateCount
                 candidateRoute = [route(1:position-1),newID, ...
@@ -29,11 +30,11 @@ switch lower(changeType)
                 [candidateCost,candidateDetail] = ...
                     EvaluateSchedule(candidateRoute,model,cache);
                 functionEvaluations = functionEvaluations+1;
-                if BetterRepairCandidate(candidateCost,candidateDetail, ...
-                        bestCost,[])
+                if IsBetterDynamicSolution(candidateCost,candidateDetail, ...
+                        bestCost,bestDetail)
                     bestRoute = candidateRoute;
                     bestCost = candidateCost;
-                    bestDetail = candidateDetail; %#ok<NASGU>
+                    bestDetail = candidateDetail;
                 end
             end
             route = bestRoute;
@@ -53,14 +54,3 @@ info.isFeasible = detail.isFeasible;
 info.route = route;
 end
 
-function result = BetterRepairCandidate(cost,detail,bestCost,~)
-% 当前作为baseline使用Penalty排序；后续可替换为Feasibility-first。
-if isempty(bestCost) || isinf(bestCost)
-    result = true;
-    return;
-end
-result = cost<bestCost;
-if detail.isFeasible && ~isfinite(bestCost)
-    result = true;
-end
-end

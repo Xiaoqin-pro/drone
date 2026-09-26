@@ -88,6 +88,10 @@ while functionEvaluations<options.maxFE
             -particle(i).Position) ...
             + options.c2*rand(1,nVar).*(GlobalBest.Position ...
             -particle(i).Position);
+        if options.feedbackEnabled
+            particle(i).Velocity=particle(i).Velocity+ ...
+                options.feedbackLearningRate*feedbackDirection;
+        end
         particle(i).Velocity = max(VelMin,min(VelMax,particle(i).Velocity));
         particle(i).Position = particle(i).Position+particle(i).Velocity;
         particle(i).Position = max(VarMin,min(VarMax,particle(i).Position));

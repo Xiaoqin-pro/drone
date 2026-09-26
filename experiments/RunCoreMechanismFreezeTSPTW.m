@@ -22,13 +22,13 @@ for i=1:height(manifest)
                 options=struct('nPop',20,'maxFE',budget,'latePenalty',1000, ...
                     'localSearchFE',0,'localSearchMode','none','silent',true);
                 if methods(m)=="Global"
-                    options.localSearchMode='global'; options.localSearchFE=instance.nCustomers;
+                    options.localSearchMode='global'; options.localSearchFE=max(1,instance.nCustomers-1);
                 elseif methods(m)=="LateOnly"
-                    options.localSearchMode='late'; options.localSearchFE=instance.nCustomers;
+                    options.localSearchMode='late'; options.localSearchFE=max(1,instance.nCustomers-1);
                 elseif methods(m)=="Propagation"
-                    options.localSearchMode='propagation'; options.localSearchFE=instance.nCustomers;
+                    options.localSearchMode='propagation'; options.localSearchFE=max(1,instance.nCustomers-1);
                 elseif methods(m)=="StateSwitch"
-                    options.localSearchMode='state-switch'; options.localSearchFE=instance.nCustomers;
+                    options.localSearchMode='state-switch'; options.localSearchFE=max(1,instance.nCustomers-1);
                 end
                 [best,history,stats]=RandomKeyTSPTWPSO(instance,options,[]); %#ok<ASGLU>
                 idx=numel(history.FE);

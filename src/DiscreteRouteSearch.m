@@ -110,8 +110,11 @@ if mode=="late" || mode=="propagation"
             end
         end
     end
-    if max(scores)<=0, scores(:)=1; end
-    [~,sourceOrder]=sort(scores,'descend');
+    if max(scores)<=0
+        sourceOrder=randperm(n);
+    else
+        [~,sourceOrder]=sort(scores,'descend');
+    end
 else
     sourceOrder=randperm(n);
 end

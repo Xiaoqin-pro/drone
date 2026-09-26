@@ -67,11 +67,13 @@ history.LocalSearchFE = zeros(0,1);
 history.LocalSearchRelocateFE = zeros(0,1);
 history.LocalSearchSwapFE = zeros(0,1);
 history.LocalSearchTwoOptFE = zeros(0,1);
+history.Mode = strings(0,1);
+history.StateSwitch = false(0,1);
 localSearchFE = 0;
 localSearchRelocateFE = 0;
 localSearchSwapFE = 0;
 localSearchTwoOptFE = 0;
-iteration = 0;
+iteration = 0; lastMode = "";
 
 while functionEvaluations<options.maxFE
     iteration = iteration+1;
@@ -108,7 +110,13 @@ while functionEvaluations<options.maxFE
             && mod(iteration,options.localSearchEvery)==0
         remaining = options.maxFE-functionEvaluations;
         searchOptions = options;
-        searchOptions.mode = options.localSearchMode;
+        searchMode = string(options.localSearchMode);
+        if searchMode=="state-switch"
+            if GlobalBest.Detail.isFeasible, searchMode="global"; else, searchMode="propagation"; end
+        end
+        stateSwitch = lastMode~="" && searchMode~=lastMode;
+        lastMode = searchMode;
+        searchOptions.mode = char(searchMode);
         searchOptions.maxFE = min(options.localSearchFE,remaining);
         [candidateRoute,candidateDetail,searchStats] = ...
             DiscreteRouteSearch(GlobalBest.Detail.route,instance, ...
@@ -118,6 +126,10 @@ while functionEvaluations<options.maxFE
         localSearchRelocateFE = localSearchRelocateFE+searchStats.relocateFE;
         localSearchSwapFE = localSearchSwapFE+searchStats.swapFE;
         localSearchTwoOptFE = localSearchTwoOptFE+searchStats.twoOptFE;
+        if isinf(firstFeasibleFE) && isfinite(searchStats.firstFeasibleEvaluation)
+            firstFeasibleFE = functionEvaluations-searchStats.functionEvaluations ...
+                +searchStats.firstFeasibleEvaluation;
+        end
         if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
             GlobalBest.Route = candidateRoute;
@@ -140,6 +152,8 @@ while functionEvaluations<options.maxFE
     history.LocalSearchRelocateFE(end+1,1) = localSearchRelocateFE;
     history.LocalSearchSwapFE(end+1,1) = localSearchSwapFE;
     history.LocalSearchTwoOptFE(end+1,1) = localSearchTwoOptFE;
+    if exist('searchMode','var'), history.Mode(end+1,1)=searchMode; else, history.Mode(end+1,1)=string(options.localSearchMode); end
+    if exist('stateSwitch','var'), history.StateSwitch(end+1,1)=stateSwitch; else, history.StateSwitch(end+1,1)=false; end
     options.w = options.w*options.wdamp;
 end
 

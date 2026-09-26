@@ -245,6 +245,28 @@ Propagation模式使用：
 
 用于优先选择时间窗传播影响较大的客户。
 
+## Core Mechanism Freeze 实验
+
+新增：
+
+```matlab
+RunCoreMechanismFreezeTSPTW
+```
+
+在标准TSPTW上比较：
+
+```text
+PSO
+PSO + GlobalRelocate
+PSO + LateOnlyRelocate
+PSO + PropagationRelocate
+PSO + StateSwitch
+```
+
+局部搜索以一个source customer的完整reinsertion neighborhood为基本单元，预算使用 `25n / 50n / 100n`。结果重点记录可行率、首次可行FE、总迟到和BKS Gap。
+
+这组实验用于决定Propagation和StateSwitch能否进入最终Proposed，不与动态三维应用实验混为一谈。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

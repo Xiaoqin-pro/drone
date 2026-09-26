@@ -19,7 +19,7 @@ if isempty(initialDetail)
 else
     bestDetail=initialDetail; bestCost=bestDetail.cost; functionEvaluations=0;
 end
-stats.functionEvaluations=functionEvaluations; stats.improvementCount=0;
+stats.functionEvaluations=functionEvaluations; stats.firstFeasibleEvaluation=inf; stats.improvementCount=0;
 stats.relocateFE=0; stats.swapFE=0; stats.twoOptFE=0;
 stats.relocateAccept=0; stats.swapAccept=0; stats.twoOptAccept=0;
 stats.moves=strings(0,1);
@@ -50,6 +50,9 @@ while functionEvaluations<options.maxFE
             nextIndex(opIndex)=nextIndex(opIndex)+1;
             [candidateCost,candidateDetail]=EvaluateTSPTWRoute(candidate,instance,options);
             functionEvaluations=functionEvaluations+1; passFE=passFE+1;
+            if isinf(stats.firstFeasibleEvaluation) && candidateDetail.isFeasible
+                stats.firstFeasibleEvaluation=functionEvaluations;
+            end
             stats=AddOperatorFE(stats,operators(opIndex));
             if IsBetterSolution(candidateCost,candidateDetail,passBestCost,passBestDetail)
                 passBestRoute=candidate; passBestDetail=candidateDetail;

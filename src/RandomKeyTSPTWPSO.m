@@ -121,7 +121,7 @@ while functionEvaluations<options.maxFE
         searchOptions = options;
         searchMode = string(options.localSearchMode);
         if searchMode=="state-switch"
-            if GlobalBest.Detail.isFeasible, searchMode="global"; else, searchMode="propagation"; end
+            if GlobalBest.Detail.isFeasible, searchMode="mixed"; else, searchMode="late"; end
         end
         stateSwitch = lastMode~="" && searchMode~=lastMode;
         lastMode = searchMode;

@@ -28,7 +28,7 @@ for i=1:height(manifest)
                 elseif methods(m)=="Propagation"
                     options.localSearchMode='propagation'; options.localSearchFE=max(1,instance.nCustomers-1);
                 elseif methods(m)=="StateSwitch"
-                    options.localSearchMode='state-switch'; options.localSearchFE=max(1,instance.nCustomers-1);
+                    options.localSearchMode='state-switch'; options.localSearchFE=3*max(1,instance.nCustomers-1);
                 end
                 [best,history,stats]=RandomKeyTSPTWPSO(instance,options,[]); %#ok<ASGLU>
                 idx=numel(history.FE);

@@ -377,6 +377,32 @@ LocalTravel
 
 Feature Audit只用于决定可行状态下是否存在稳定quality-oriented source信息，不直接引入新的算法公式。
 
+## 可行后邻域族审计与边界机制候选
+
+新增：
+
+```matlab
+RunPostFeasibleNeighborhoodForkAudit
+```
+
+从同一条first-feasible路线出发，在相同FE预算下比较：
+
+```text
+GlobalRelocate
+Swap
+2-opt
+VND
+```
+
+当前审计结果显示，rc_201.1和rc_201.3的可行后质量强化中，Swap/2-opt/VND存在比单一Relocate更好的信号，因此后续StateAware候选不再局限于“Late→Global Relocate”，而是考虑：
+
+```text
+不可行：Late-directed Relocate
+可行：VND / 多邻域质量强化
+```
+
+这只是机制候选，正式Proposed前仍需在更多hard-feasible和phase-transition实例上验证。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

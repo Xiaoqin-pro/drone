@@ -31,6 +31,7 @@ GlobalBest.Cost = inf;
 GlobalBest.Position = [];
 GlobalBest.Detail = [];
 functionEvaluations = 0;
+feedbackDirection=zeros(1,nVar); feedbackUpdates=0;
 firstFeasibleFE = inf;
 firstFeasibleRoute = []; firstFeasibleDetail = [];
 
@@ -71,6 +72,7 @@ history.LocalSearchSwapFE = zeros(0,1);
 history.LocalSearchTwoOptFE = zeros(0,1);
 history.Mode = strings(0,1);
 history.StateSwitch = false(0,1);
+history.FeedbackNorm = zeros(0,1); history.FeedbackUpdates = zeros(0,1);
 localSearchFE = 0;
 localSearchRelocateFE = 0;
 localSearchSwapFE = 0;
@@ -121,8 +123,9 @@ while functionEvaluations<options.maxFE
         lastMode = searchMode;
         searchOptions.mode = char(searchMode);
         searchOptions.maxFE = min(options.localSearchFE,remaining);
+        routeBeforeLocal=GlobalBest.Detail.route;
         [candidateRoute,candidateDetail,searchStats] = ...
-            DiscreteRouteSearch(GlobalBest.Detail.route,instance, ...
+            DiscreteRouteSearch(routeBeforeLocal,instance, ...
             searchOptions,GlobalBest.Detail);
         functionEvaluations = functionEvaluations+searchStats.functionEvaluations;
         localSearchFE = localSearchFE+searchStats.functionEvaluations;
@@ -132,7 +135,12 @@ while functionEvaluations<options.maxFE
         if isinf(firstFeasibleFE) && isfinite(searchStats.firstFeasibleEvaluation)
             firstFeasibleFE = functionEvaluations-searchStats.functionEvaluations ...
                 +searchStats.firstFeasibleEvaluation;
-            firstFeasibleRoute = candidateRoute; firstFeasibleDetail = candidateDetail;
+            if ~isempty(searchStats.firstFeasibleRoute)
+                firstFeasibleRoute = searchStats.firstFeasibleRoute;
+                firstFeasibleDetail = searchStats.firstFeasibleDetail;
+            else
+                firstFeasibleRoute = candidateRoute; firstFeasibleDetail = candidateDetail;
+            end
         end
         if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
@@ -140,6 +148,13 @@ while functionEvaluations<options.maxFE
             GlobalBest.Detail = candidateDetail;
             GlobalBest.Cost = candidateDetail.cost;
             GlobalBest.Position = RouteToKeys(candidateRoute,instance.customerIDs);
+            if options.feedbackEnabled
+                [newDirection,feedbackDetail]=BuildRelocateLearningDirection( ...
+                    routeBeforeLocal, candidateRoute, instance.customerIDs); %#ok<ASGLU>
+                feedbackDirection=options.feedbackDecay*feedbackDirection ...
+                    +(1-options.feedbackDecay)*newDirection;
+                feedbackUpdates=feedbackUpdates+1;
+            end
             if candidateDetail.isFeasible && isinf(firstFeasibleFE)
                 firstFeasibleFE = functionEvaluations;
             end
@@ -158,6 +173,8 @@ while functionEvaluations<options.maxFE
     history.LocalSearchTwoOptFE(end+1,1) = localSearchTwoOptFE;
     if exist('searchMode','var'), history.Mode(end+1,1)=searchMode; else, history.Mode(end+1,1)=string(options.localSearchMode); end
     if exist('stateSwitch','var'), history.StateSwitch(end+1,1)=stateSwitch; else, history.StateSwitch(end+1,1)=false; end
+    history.FeedbackNorm(end+1,1)=norm(feedbackDirection);
+    history.FeedbackUpdates(end+1,1)=feedbackUpdates;
     options.w = options.w*options.wdamp;
 end
 
@@ -174,6 +191,8 @@ stats.localSearchRelocateFE = localSearchRelocateFE;
 stats.localSearchSwapFE = localSearchSwapFE;
 stats.localSearchTwoOptFE = localSearchTwoOptFE;
 stats.localSearchMode = string(options.localSearchMode);
+stats.feedbackUpdates=feedbackUpdates;
+stats.feedbackDirection=feedbackDirection;
 stats.initialPopulation = nPop;
 end
 
@@ -181,7 +200,8 @@ function options = FillOptions(options,instance)
 defaults = struct('nPop',20,'maxFE',1000,'w',1.0,'wdamp',0.99, ...
     'c1',1.5,'c2',1.5,'velocityRatio',0.20,'latePenalty',1000, ...
     'waitPenalty',0,'localSearchMode','none','localSearchFE',0, ...
-    'localSearchEvery',1,'silent',true);
+    'localSearchEvery',1,'silent',true, ...
+    'feedbackEnabled',false,'feedbackLearningRate',0.35,'feedbackDecay',0.80);
 fields = fieldnames(defaults);
 for k = 1:numel(fields)
     field = fields{k};

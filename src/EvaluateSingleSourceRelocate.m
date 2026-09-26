@@ -17,6 +17,7 @@ remaining=route; remaining(sourcePosition)=[];
 positionOrder=1:(numel(remaining)+1);
 functionEvaluations=initialEvaluations;
 bestRoute=route; improvementCount=0; firstFeasibleEvaluation=inf;
+firstFeasibleRoute=[]; firstFeasibleDetail=[];
 for position=positionOrder
     candidate=[remaining(1:position-1),sourceNode,remaining(position:end)];
     if isequal(candidate,route), continue; end
@@ -24,6 +25,7 @@ for position=positionOrder
     functionEvaluations=functionEvaluations+1;
     if isinf(firstFeasibleEvaluation) && candidateDetail.isFeasible
         firstFeasibleEvaluation=functionEvaluations;
+        firstFeasibleRoute=candidate; firstFeasibleDetail=candidateDetail;
     end
     if IsBetterTSPTWSolution(candidateCost,candidateDetail,bestCost,bestDetail)
         bestRoute=candidate; bestCost=candidateCost; bestDetail=candidateDetail;
@@ -34,6 +36,8 @@ stats.functionEvaluations=functionEvaluations;
 stats.improvementCount=improvementCount;
 stats.sourceNode=sourceNode;
 stats.firstFeasibleEvaluation=firstFeasibleEvaluation;
+stats.firstFeasibleRoute=firstFeasibleRoute;
+stats.firstFeasibleDetail=firstFeasibleDetail;
 stats.isFeasible=bestDetail.isFeasible;
 stats.lateReduction=max(0,initialDetailOrValue(route,instance,initialDetail,options,'late')-bestDetail.totalLate);
 end

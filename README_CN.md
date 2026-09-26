@@ -287,6 +287,26 @@ StateSwitchToGlobal
 
 用于单独测量进入可行域后切换到Global Relocate是否继续改善路线质量。
 
+## Discrete-to-Swarm Feedback 原型
+
+为检验离散Relocate经验能否反向增强PSO，新增：
+
+```matlab
+RunFeedbackAblationTSPTW
+```
+
+比较：
+
+```text
+PSO
+PSO + Relocate
+PSO + StateSwitch
+PSO + Relocate + Feedback
+StateSwitch + Feedback
+```
+
+当前结果用于机制筛选。若Feedback不能在相同FE下稳定优于不带Feedback的对应方法，则不将其保留为Proposed核心，仅作为负结果和补充分析。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

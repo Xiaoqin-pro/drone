@@ -325,6 +325,37 @@ Normalized regret
 
 该实验用于判断可行状态下是否存在稳定的quality-oriented source information，避免直接凭直觉设计第二个状态机制。
 
+## Feasible Source Oracle Audit V2
+
+当前Oracle审计已扩展为：
+
+```matlab
+RunFeasibleSourceOracleAudit
+```
+
+V2收集每个种子的：
+
+```text
+first-feasible route
+final-feasible route
+reference route
+```
+
+并对每条路线完整评价所有source neighborhood，记录：
+
+```text
+oracle gain
+random expected gain
+random improve probability
+actionable state
+source gain
+removal saving
+slack
+waiting
+```
+
+这些结果用于先诊断可行状态下是否存在可利用的quality-oriented source information，再决定是否设计新的source规则。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

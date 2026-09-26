@@ -1,77 +1,90 @@
 function results = RunFeasibleSourceOracleAudit
-%RUNFEASIBLESOURCEORACLEAUDIT 评估可行路线下source选择信息的预测能力
-%   该实验不改变算法，只离线完整评价每个source的reinsertion neighborhood。
+%RUNFEASIBLESOURCEORACLEAUDIT Oracle Audit V2
+%   收集first-feasible/final-feasible路线，完整评价所有source neighborhood，
+%   并计算actionable、gain、capture和random expected baseline。
 
 root=fileparts(fileparts(mfilename('fullpath'))); setup;
 benchmarkDir=fullfile(root,'data','tsp_tw_benchmark');
 manifest=readtable(fullfile(benchmarkDir,'manifest.csv'),'Delimiter',',','TextType','string');
 reference=ReadTSPTWReferenceSolutions(fullfile(root,'data','tsp_tw_raw','best_known', ...
     'SolomonPotvinBengio-best-known-traveltime.txt'));
-rows=cell(0,1); routeRows=cell(0,1); options=struct('latePenalty',1000);
+routeRows=cell(0,1); sourceRows=cell(0,1); options=struct('latePenalty',1000);
 for i=1:height(manifest)
     instance=ReadTSPTWInstance(fullfile(benchmarkDir,manifest.file(i)));
     refIndex=find(strcmpi(string({reference.file}),manifest.file(i)),1);
     referenceRoute=reference(refIndex).permutation+1;
-    candidateRoutes={referenceRoute}; candidateLabels={"reference"};
-    % 补充少量算法得到的可行路线，避免只审计官方路线。
-    for seedIndex=1:10
+    candidateRoutes={referenceRoute}; candidateLabels={"reference"}; candidateSeeds=0;
+    for seedIndex=1:20
         rng(990000+100*i+seedIndex,'twister');
         runOptions=struct('nPop',20,'maxFE',100*instance.nCustomers, ...
             'localSearchMode','state-switch','localSearchFE',max(1,instance.nCustomers-1), ...
             'latePenalty',1000,'silent',true);
-        [best,~,~]=RandomKeyTSPTWPSO(instance,runOptions,[]);
+        [best,~,stats]=RandomKeyTSPTWPSO(instance,runOptions,[]);
+        if ~isempty(stats.firstFeasibleRoute)
+            candidateRoutes{end+1}=stats.firstFeasibleRoute; %#ok<AGROW>
+            candidateLabels{end+1}="first-feasible"; %#ok<AGROW>
+            candidateSeeds(end+1)=seedIndex; %#ok<AGROW>
+        end
         if best.Detail.isFeasible
             candidateRoutes{end+1}=best.Route; %#ok<AGROW>
-            candidateLabels{end+1}="state-switch"; %#ok<AGROW>
+            candidateLabels{end+1}="final-feasible"; %#ok<AGROW>
+            candidateSeeds(end+1)=seedIndex; %#ok<AGROW>
         end
     end
     routeKeys=cellfun(@(r)sprintf('%d_',r),candidateRoutes,'UniformOutput',false);
     [~,uniqueIndex]=unique(routeKeys,'stable');
-    candidateRoutes=candidateRoutes(uniqueIndex); candidateLabels=candidateLabels(uniqueIndex);
+    candidateRoutes=candidateRoutes(uniqueIndex); candidateLabels=candidateLabels(uniqueIndex); candidateSeeds=candidateSeeds(uniqueIndex);
 
     for routeIndex=1:numel(candidateRoutes)
         route=candidateRoutes{routeIndex};
         [routeCost,routeDetail]=EvaluateTSPTWRoute(route,instance,options);
         n=numel(route); sourceCosts=zeros(1,n);
+        sourceDetails=cell(1,n);
         for sourceIndex=1:n
-            [~,sourceCost,~,~]=EvaluateSingleSourceRelocate( ...
+            [~,sourceCost,sourceDetail,~]=EvaluateSingleSourceRelocate( ...
                 route,instance,route(sourceIndex),routeDetail,options);
-            sourceCosts(sourceIndex)=sourceCost;
+            sourceCosts(sourceIndex)=sourceCost; sourceDetails{sourceIndex}=sourceDetail;
         end
-        [oracleCost,oracleIndex]=min(sourceCosts);
+        gains=routeCost-sourceCosts;
+        actionable=any(gains>1e-10);
+        [oracleCost,oracleIndex]=min(sourceCosts); oracleGain=max(gains);
         oracleSource=route(oracleIndex);
-        removalSaving=RemovalSavingScores(route,instance);
-        [~,removalIndex]=max(removalSaving); removalSource=route(removalIndex);
-        rng(991000+100*i+routeIndex,'twister'); randomIndex=randi(n); randomSource=route(randomIndex);
-        sourceRules={"Random",randomIndex,randomSource; ...
-            "RemovalSaving",removalIndex,removalSource};
-        [~,oracleOrder]=sort(sourceCosts,'ascend');
-        for ruleIndex=1:size(sourceRules,1)
-            rule=sourceRules{ruleIndex,1}; selectedIndex=sourceRules{ruleIndex,2};
-            selectedCost=sourceCosts(selectedIndex);
-            rank=find(oracleOrder==selectedIndex,1);
-            regret=(selectedCost-oracleCost)/max(abs(oracleCost),eps);
-            rows{end+1,1}={manifest.name(i),routeIndex,string(candidateLabels{routeIndex}), ...
-                routeCost,rule,sourceRules{ruleIndex,3},oracleSource,rank, ...
-                selectedCost,oracleCost,regret,selectedCost<routeCost-1e-10}; %#ok<AGROW>
+        randomExpectedGain=mean(max(gains,0));
+        randomImproveProbability=mean(gains>1e-10);
+        if actionable
+            captureText="actionable";
+        else
+            captureText="non-actionable";
         end
         routeRows{end+1,1}={manifest.name(i),routeIndex,string(candidateLabels{routeIndex}), ...
-            routeCost,oracleSource,oracleCost,n}; %#ok<AGROW>
+            candidateSeeds(routeIndex),routeCost,oracleSource,oracleCost,oracleGain, ...
+            randomExpectedGain,randomImproveProbability,actionable,captureText,n}; %#ok<AGROW>
+        removalSaving=RemovalSavingScores(route,instance);
+        for sourceIndex=1:n
+            k=sourceIndex; rec=routeDetail.records(k,:);
+            slack=instance.windows(route(k),2)-rec(3);
+            sourceRows{end+1,1}={manifest.name(i),routeIndex,string(candidateLabels{routeIndex}), ...
+                candidateSeeds(routeIndex),route(k),sourceCosts(k),max(0,gains(k)), ...
+                max(0,removalSaving(k)),slack,max(0,rec(4)),max(0,rec(5)), ...
+                sourceIndex==oracleIndex,actionable}; %#ok<AGROW>
+        end
     end
-    fprintf('%s: audited %d feasible routes.\n',manifest.name(i),numel(candidateRoutes));
+    fprintf('%s: collected %d feasible routes.\n',manifest.name(i),numel(candidateRoutes));
 end
-summary=cell2table(vertcat(rows{:}),'VariableNames',{ ...
-    'instance','route_index','route_source','route_cost','rule','selected_source', ...
-    'oracle_source','oracle_rank','selected_cost','oracle_cost','normalized_regret', ...
-    'improves_route'});
 routeSummary=cell2table(vertcat(routeRows{:}),'VariableNames',{ ...
-    'instance','route_index','route_source','route_cost','oracle_source', ...
-    'oracle_cost','nCustomers'});
-results.summary=summary; results.routeSummary=routeSummary;
-writetable(summary,fullfile(root,'results','feasible_source_oracle_audit_summary.csv'));
-writetable(routeSummary,fullfile(root,'results','feasible_source_oracle_routes.csv'));
-save(fullfile(root,'results','feasible_source_oracle_audit_result.mat'),'results');
-fprintf('Feasible source oracle audit completed: %d source-rule rows.\n',height(summary));
+    'instance','route_index','route_source','seed','route_cost','oracle_source', ...
+    'oracle_cost','oracle_gain','random_expected_gain','random_improve_probability', ...
+    'actionable','actionability_label','nCustomers'});
+sourceSummary=cell2table(vertcat(sourceRows{:}),'VariableNames',{ ...
+    'instance','route_index','route_source','seed','source_node','source_cost', ...
+    'source_gain','removal_saving','slack','late','waiting','is_oracle_source', ...
+    'actionable'});
+results.routeSummary=routeSummary; results.sourceSummary=sourceSummary;
+writetable(routeSummary,fullfile(root,'results','feasible_source_oracle_v2_routes.csv'));
+writetable(sourceSummary,fullfile(root,'results','feasible_source_oracle_v2_sources.csv'));
+save(fullfile(root,'results','feasible_source_oracle_v2_result.mat'),'results','-v7.3');
+fprintf('Feasible source oracle V2 completed: %d routes, %d source rows.\n', ...
+    height(routeSummary),height(sourceSummary));
 end
 
 function scores=RemovalSavingScores(route,instance)
@@ -84,4 +97,3 @@ for k=1:n
         -instance.costMatrix(prev,next);
 end
 end
-

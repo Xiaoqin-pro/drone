@@ -267,6 +267,26 @@ PSO + StateSwitch
 
 这组实验用于决定Propagation和StateSwitch能否进入最终Proposed，不与动态三维应用实验混为一谈。
 
+## 因果机制审计
+
+为区分“Relocate有效”和“source选择有效”，新增：
+
+```matlab
+RunSourceSelectionAudit
+RunStateSwitchForkAudit
+```
+
+`RunSourceSelectionAudit` 在相同的不可行路线集上分别测试Global、LateOnly和Propagation source，不经过PSO轨迹，直接比较一次完整source neighborhood的迟到下降和可行性恢复。
+
+`RunStateSwitchForkAudit` 从同一条first-feasible路线分叉：
+
+```text
+AlwaysPropagation
+StateSwitchToGlobal
+```
+
+用于单独测量进入可行域后切换到Global Relocate是否继续改善路线质量。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

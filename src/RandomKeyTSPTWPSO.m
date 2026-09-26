@@ -32,6 +32,7 @@ GlobalBest.Position = [];
 GlobalBest.Detail = [];
 functionEvaluations = 0;
 firstFeasibleFE = inf;
+firstFeasibleRoute = []; firstFeasibleDetail = [];
 
 for i = 1:nPop
     if ~isempty(initialPositions) && i<=size(initialPositions,1)
@@ -47,6 +48,7 @@ for i = 1:nPop
     functionEvaluations = functionEvaluations+1;
     if isinf(firstFeasibleFE) && particle(i).Detail.isFeasible
         firstFeasibleFE = functionEvaluations;
+        firstFeasibleRoute = route; firstFeasibleDetail = particle(i).Detail;
     end
     particle(i).Best.Position = particle(i).Position;
     particle(i).Best.Cost = particle(i).Cost;
@@ -93,6 +95,7 @@ while functionEvaluations<options.maxFE
         functionEvaluations = functionEvaluations+1;
         if isinf(firstFeasibleFE) && particle(i).Detail.isFeasible
             firstFeasibleFE = functionEvaluations;
+            firstFeasibleRoute = route; firstFeasibleDetail = particle(i).Detail;
         end
         if IsBetterSolution(particle(i).Cost,particle(i).Detail, ...
                 particle(i).Best.Cost,particle(i).Best.Detail)
@@ -129,6 +132,7 @@ while functionEvaluations<options.maxFE
         if isinf(firstFeasibleFE) && isfinite(searchStats.firstFeasibleEvaluation)
             firstFeasibleFE = functionEvaluations-searchStats.functionEvaluations ...
                 +searchStats.firstFeasibleEvaluation;
+            firstFeasibleRoute = candidateRoute; firstFeasibleDetail = candidateDetail;
         end
         if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
@@ -163,6 +167,8 @@ BestSol.TourCost = GlobalBest.Detail.tourCost;
 stats.functionEvaluations = functionEvaluations;
 stats.iterations = iteration;
 stats.firstFeasibleFE = firstFeasibleFE;
+stats.firstFeasibleRoute = firstFeasibleRoute;
+stats.firstFeasibleDetail = firstFeasibleDetail;
 stats.localSearchFE = localSearchFE;
 stats.localSearchRelocateFE = localSearchRelocateFE;
 stats.localSearchSwapFE = localSearchSwapFE;

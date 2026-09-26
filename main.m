@@ -10,6 +10,8 @@ fprintf('  ValidateTSPTWReferenceSolutions\n');
 fprintf('  RunTSPTWOptimizerPrototype\n');
 fprintf('  RunFixedBudgetAudit\n');
 fprintf('  RunTSPTWFeasibilityAudit\n');
+fprintf('  RunSourceSelectionAudit\n');
+fprintf('  RunStateSwitchForkAudit\n');
 fprintf('Audit commands:\n');
 fprintf('  RunExactDynamicAudit\n');
 fprintf('  RunFeasibleConstructionAudit\n');

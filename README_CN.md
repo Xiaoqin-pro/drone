@@ -538,6 +538,24 @@ BuildVNDContributionSummary
 
 同时修正了 `phaseGainPerFE` 的分母，使其使用 `phaseSwitchFE` 而不是Boundary事件FE。
 
+## 全量SPB机制筛选
+
+新增：
+
+```matlab
+RunAllSPBMechanismScreen
+```
+
+该实验扫描仓库中的全部30个Solomon-Potvin-Bengio TSPTW实例，在100n FE、10个种子下比较：
+
+```text
+LateOnly
+LateTo2Opt
+LateToVND
+```
+
+结果用于从开发集进入正式benchmark阶段，重点报告可行率、FirstFeasibleFE、Gap和Phase-II指标。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

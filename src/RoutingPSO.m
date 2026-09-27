@@ -14,6 +14,7 @@ empty.Position=[]; empty.Velocity=[]; empty.Cost=[]; empty.Detail=[];
 empty.Best.Position=[]; empty.Best.Cost=[]; empty.Best.Detail=[];
 particle=repmat(empty,nPop,1); GlobalBest.Cost=inf; GlobalBest.Detail=[]; GlobalBest.Position=[];
 functionEvaluations=0; firstFeasibleIteration=inf; firstFeasibleEvaluation=inf;
+boundaryReached=false; phaseSwitchFE=inf;
 
 for i=1:nPop
     if isempty(initialPositions)
@@ -39,7 +40,9 @@ for i=1:nPop
         GlobalBest=particle(i).Best;
     end
 end
-if GlobalBest.Detail.isFeasible, firstFeasibleIteration=0; end
+if GlobalBest.Detail.isFeasible
+    firstFeasibleIteration=0; firstFeasibleEvaluation=nPop; boundaryReached=true;
+end
 
 stats.initialBestCost=GlobalBest.Cost;
 stats.localSearchImprovementCount=0;
@@ -78,16 +81,43 @@ for it=1:MaxIt
         end
     end
 
+    if ~boundaryReached && GlobalBest.Detail.isFeasible
+        boundaryReached=true;
+        if isinf(firstFeasibleEvaluation), firstFeasibleEvaluation=functionEvaluations; end
+    end
     if searchOptions.enabled && searchOptions.localSearchFE>0
-        [candidateRoute,candidateCost,candidateDetail,searchStats] = ...
-            DynamicRelocateSearch(GlobalBest.Detail.routeIDs,model,cache, ...
-            searchOptions,searchOptions.localSearchFE,GlobalBest.Detail);
+        mode=lower(string(searchOptions.mode));
+        localBudget=searchOptions.localSearchFE;
+        if mode=="boundary-vnd"
+            if boundaryReached
+                mode="dynamic-vnd"; localBudget=searchOptions.intensificationFE;
+            else
+                mode="late-relocate"; localBudget=searchOptions.restorationFE;
+            end
+        end
+        if mode=="dynamic-vnd"
+            if isinf(phaseSwitchFE), phaseSwitchFE=functionEvaluations; end
+            vndOptions=searchOptions; vndOptions.neighborhoodQuota=max(1,numel(cache.customerIDs)-1);
+            [candidateRoute,candidateCost,candidateDetail,searchStats]=DynamicBudgetedVND( ...
+                GlobalBest.Detail.routeIDs,model,cache,min(localBudget,searchOptions.maxFE-functionEvaluations), ...
+                GlobalBest.Detail,vndOptions);
+        else
+            if mode=="late-relocate"
+                [priorityIDs,priorityScores]=BuildLatePriority(GlobalBest.Detail,cache.customerIDs);
+                searchOptions.impactIDs=priorityIDs; searchOptions.impactScores=priorityScores;
+                mode="impact-relocate";
+            end
+            [candidateRoute,candidateCost,candidateDetail,searchStats]= ...
+                DynamicRelocateSearch(GlobalBest.Detail.routeIDs,model,cache, ...
+                searchOptions,min(localBudget,searchOptions.maxFE-functionEvaluations),GlobalBest.Detail);
+        end
+        if ~exist('candidateCost','var') || isempty(candidateCost), candidateCost=candidateDetail.cost; end
         functionEvaluations=functionEvaluations+searchStats.functionEvaluations;
         localSearchFE=localSearchFE+searchStats.functionEvaluations;
         stats.localSearchImprovementCount=stats.localSearchImprovementCount+searchStats.improvementCount;
-        stats.priorityFE=stats.priorityFE+searchStats.priorityFE;
-        stats.globalFE=stats.globalFE+searchStats.globalFE;
-        stats.acceptedSourceRanks=[stats.acceptedSourceRanks;searchStats.acceptedSourceRanks]; %#ok<AGROW>
+        if isfield(searchStats,'priorityFE'), stats.priorityFE=stats.priorityFE+searchStats.priorityFE; end
+        if isfield(searchStats,'globalFE'), stats.globalFE=stats.globalFE+searchStats.globalFE; end
+        if isfield(searchStats,'acceptedSourceRanks'), stats.acceptedSourceRanks=[stats.acceptedSourceRanks;searchStats.acceptedSourceRanks]; end
         if IsBetterDynamicSolution(candidateCost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
             GlobalBest.Route=candidateRoute;
@@ -130,10 +160,14 @@ stats.firstFeasibleEvaluation=firstFeasibleEvaluation;
 stats.isWarmStart=~isempty(initialPositions);
 stats.localSearchFE=localSearchFE;
 stats.localSearchMode=string(searchOptions.mode);
+stats.boundaryReached=boundaryReached; stats.phaseSwitchFE=phaseSwitchFE;
+stats.restorationFE=0; stats.intensificationFE=0;
 end
 
 function options=FillSearchOptions(options,cache)
 defaults=struct('enabled',false,'mode','none','localSearchFE',0, ...
+    'restorationFE',max(1,numel(cache.customerIDs)-1), ...
+    'intensificationFE',3*max(1,numel(cache.customerIDs)-1),'maxFE',inf, ...
     'priorityIDs',cache.customerIDs(:)','impactIDs',cache.customerIDs(:)', ...
     'impactScores',zeros(size(cache.customerIDs(:)')),'impactAlpha',0.7);
 fields=fieldnames(defaults);
@@ -144,6 +178,19 @@ end
 options.priorityIDs=intersect(options.priorityIDs,cache.customerIDs(:)','stable');
 options.impactIDs=options.impactIDs(:)';
 options.impactScores=options.impactScores(:)';
+end
+
+function [priorityIDs,priorityScores]=BuildLatePriority(detail,customerIDs)
+priorityIDs=customerIDs(:)'; priorityScores=zeros(size(priorityIDs));
+if isfield(detail,'records') && ~isempty(detail.records)
+    late=zeros(size(priorityIDs));
+    for k=1:size(detail.records,1)
+        idx=find(priorityIDs==detail.records(k,1),1);
+        if ~isempty(idx), late(idx)=max(0,detail.records(k,4)); end
+    end
+    if sum(late)<=0, late(:)=1; end
+    priorityScores=late;
+end
 end
 
 function position=RouteToPosition(route,customerIDs)

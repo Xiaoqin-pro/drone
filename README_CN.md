@@ -723,6 +723,32 @@ Clean GVNS pilot
 
 Clean GVNS当前用于验证实例、目标函数、可行性判定和FE计数接口，不作为最终强基线结论。成熟GVNS/LNS实现仍需在正式论文实验阶段接入。
 
+## Dynamic 3D FB-CMPSO Prototype
+
+新增：
+
+```matlab
+RunDynamicFBCMPSOPrototype
+```
+
+该实验把TSPTW中冻结的边界机制迁移回动态三维UAV场景，比较：
+
+```text
+Repair
+WarmPSO
+FB-CMPSO
+```
+
+FB-CMPSO在动态事件后的搜索结构为：
+
+```text
+不可行：Late/violation-oriented restoration
+跨过boundary：进入Phase II
+可行：三维EvaluateSchedule下的Budgeted VND
+```
+
+当前使用8个动态三维场景、10个种子和500/1000/1500/2500 FE检查点。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

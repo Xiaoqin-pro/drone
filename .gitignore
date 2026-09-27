@@ -18,3 +18,5 @@ matlab.prj
 # External phase-transition benchmark (large extracted data stays local)
 data/phase_transition_extracted/
 data/phase_transition_reference/
+# Local third-party baseline checkouts and binaries
+external_baselines/

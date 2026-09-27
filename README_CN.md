@@ -403,6 +403,24 @@ VND
 
 这只是机制候选，正式Proposed前仍需在更多hard-feasible和phase-transition实例上验证。
 
+## Boundary VND V1 原型
+
+当前StateSwitch已进一步改为真正的两阶段预算：
+
+```text
+Phase I：Late-directed Relocate，预算 n-1
+第一次可行：BoundaryEvent
+Phase II：Budgeted VND，邻域顺序 2-opt → Swap → Relocate
+```
+
+新增：
+
+```text
+src/BudgetedVND.m
+```
+
+这一步解决了此前StateSwitch在不可行阶段提前消耗 `3(n-1)` 局部FE的问题。可行前和可行后的局部搜索预算现在分开管理。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

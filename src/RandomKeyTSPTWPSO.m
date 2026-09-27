@@ -78,6 +78,7 @@ localSearchRelocateFE = 0;
 localSearchSwapFE = 0;
 localSearchTwoOptFE = 0;
 iteration = 0; lastMode = "";
+boundaryReached = GlobalBest.Detail.isFeasible; boundaryFE = inf;
 
 while functionEvaluations<options.maxFE
     iteration = iteration+1;
@@ -115,27 +116,45 @@ while functionEvaluations<options.maxFE
         end
     end
 
+    if ~boundaryReached && GlobalBest.Detail.isFeasible
+        boundaryReached=true; boundaryFE=functionEvaluations;
+    end
     if options.localSearchFE>0 && functionEvaluations<options.maxFE ...
             && mod(iteration,options.localSearchEvery)==0
         remaining = options.maxFE-functionEvaluations;
         searchOptions = options;
         searchMode = string(options.localSearchMode);
+        localBudget = options.localSearchFE;
         if searchMode=="state-switch"
-            if GlobalBest.Detail.isFeasible, searchMode="mixed"; else, searchMode="late"; end
+            if boundaryReached
+                searchMode="budgeted-vnd";
+                localBudget=options.intensificationFE;
+            else
+                searchMode="late";
+                localBudget=options.restorationFE;
+            end
         end
         stateSwitch = lastMode~="" && searchMode~=lastMode;
         lastMode = searchMode;
         searchOptions.mode = char(searchMode);
-        searchOptions.maxFE = min(options.localSearchFE,remaining);
+        searchOptions.maxFE = min(localBudget,remaining);
         routeBeforeLocal=GlobalBest.Detail.route;
-        [candidateRoute,candidateDetail,searchStats] = ...
-            DiscreteRouteSearch(routeBeforeLocal,instance, ...
-            searchOptions,GlobalBest.Detail);
+        if searchMode=="budgeted-vnd"
+            vndOptions=searchOptions;
+            vndOptions.neighborhoodOrder=["2opt","swap","relocate"];
+            [candidateRoute,candidateDetail,searchStats] = ...
+                BudgetedVND(routeBeforeLocal,instance,searchOptions.maxFE, ...
+                GlobalBest.Detail,vndOptions);
+        else
+            [candidateRoute,candidateDetail,searchStats] = ...
+                DiscreteRouteSearch(routeBeforeLocal,instance, ...
+                searchOptions,GlobalBest.Detail);
+        end
         functionEvaluations = functionEvaluations+searchStats.functionEvaluations;
         localSearchFE = localSearchFE+searchStats.functionEvaluations;
-        localSearchRelocateFE = localSearchRelocateFE+searchStats.relocateFE;
-        localSearchSwapFE = localSearchSwapFE+searchStats.swapFE;
-        localSearchTwoOptFE = localSearchTwoOptFE+searchStats.twoOptFE;
+        if isfield(searchStats,'relocateFE'), localSearchRelocateFE=localSearchRelocateFE+searchStats.relocateFE; end
+        if isfield(searchStats,'swapFE'), localSearchSwapFE=localSearchSwapFE+searchStats.swapFE; end
+        if isfield(searchStats,'twoOptFE'), localSearchTwoOptFE=localSearchTwoOptFE+searchStats.twoOptFE; end
         if isinf(firstFeasibleFE) && isfinite(searchStats.firstFeasibleEvaluation)
             firstFeasibleFE = functionEvaluations-searchStats.functionEvaluations ...
                 +searchStats.firstFeasibleEvaluation;
@@ -145,6 +164,7 @@ while functionEvaluations<options.maxFE
             else
                 firstFeasibleRoute = candidateRoute; firstFeasibleDetail = candidateDetail;
             end
+            boundaryReached=true; boundaryFE=firstFeasibleFE;
         end
         if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
@@ -161,6 +181,7 @@ while functionEvaluations<options.maxFE
             end
             if candidateDetail.isFeasible && isinf(firstFeasibleFE)
                 firstFeasibleFE = functionEvaluations;
+                boundaryReached=true; boundaryFE=firstFeasibleFE;
             end
         end
     end
@@ -190,6 +211,7 @@ stats.iterations = iteration;
 stats.firstFeasibleFE = firstFeasibleFE;
 stats.firstFeasibleRoute = firstFeasibleRoute;
 stats.firstFeasibleDetail = firstFeasibleDetail;
+stats.boundaryReached=boundaryReached; stats.boundaryFE=boundaryFE;
 stats.localSearchFE = localSearchFE;
 stats.localSearchRelocateFE = localSearchRelocateFE;
 stats.localSearchSwapFE = localSearchSwapFE;
@@ -205,7 +227,8 @@ defaults = struct('nPop',20,'maxFE',1000,'w',1.0,'wdamp',0.99, ...
     'c1',1.5,'c2',1.5,'velocityRatio',0.20,'latePenalty',1000, ...
     'waitPenalty',0,'localSearchMode','none','localSearchFE',0, ...
     'localSearchEvery',1,'silent',true, ...
-    'feedbackEnabled',false,'feedbackLearningRate',0.35,'feedbackDecay',0.80);
+    'feedbackEnabled',false,'feedbackLearningRate',0.35,'feedbackDecay',0.80, ...
+    'restorationFE',max(1,instance.nCustomers-1),'intensificationFE',3*max(1,instance.nCustomers-1));
 fields = fieldnames(defaults);
 for k = 1:numel(fields)
     field = fields{k};

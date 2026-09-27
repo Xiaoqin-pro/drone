@@ -809,6 +809,31 @@ all alignment_pass = true
 
 DD-LNS输出目标只保留两位小数，因此与MATLAB高精度回灌值存在毫厘级误差。
 
+## External DD-LNS SPB Summary
+
+新增：
+
+```matlab
+BuildExternalBaselineSummary
+```
+
+该汇总严格分开两种协议：
+
+```text
+内部方法：100n FE
+DD-LNS：published initial solution + fixed wall-clock time
+```
+
+输出：
+
+```text
+results/external_spb_instance_comparison.csv
+results/external_spb_summary.csv
+results/external_spb_comparison_result.mat
+```
+
+DD-LNS不与内部方法混入同一个FE Average Rank，而是单独报告可行率、Gap、BKS hits、time-to-best和wall time。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

@@ -628,6 +628,26 @@ LateOnly：约2.40
 
 `nBestIncludingTies`只在quality-evaluable实例上统计。
 
+## Phase-transition Budget Screen
+
+新增：
+
+```matlab
+RunPhaseTransitionBudgetScreen
+```
+
+该实验只使用LateOnly定位外部phase-transition实例的可行性预算区域，不比较Phase-II算法。当前扫描：
+
+```text
+n=21 / n=31
+beta=0.70 / 0.80 / 0.90 / 1.00
+每个beta 5个instance realizations
+100n / 200n / 500n
+每个条件3个seed
+```
+
+这一步用于筛选boundary-active区域；100n pilot中三种方法完全相同是预期现象，因为它们尚未跨过feasibility boundary。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

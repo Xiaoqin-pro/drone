@@ -782,6 +782,33 @@ DD-LNS现在使用其公开的SolomonPotvinBengio initial solution protocol，�
 
 30条运行中，路线、可行性和tour cost语义已经完成对齐；输出小数误差来自DD-LNS表格只打印两位小数。
 
+## Formal DD-LNS SPB Comparison
+
+新增：
+
+```matlab
+RunDDLNSFormalSPB
+```
+
+DD-LNS按其published initial-solution protocol运行：
+
+```text
+30个SPB实例
+5个seed
+width=100
+time limit=5 seconds
+```
+
+所有150次运行均成功返回路线，并经过当前 `EvaluateTSPTWRoute` 回灌核验：
+
+```text
+all status = solved
+all totalLate = 0
+all alignment_pass = true
+```
+
+DD-LNS输出目标只保留两位小数，因此与MATLAB高精度回灌值存在毫厘级误差。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

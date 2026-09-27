@@ -704,6 +704,25 @@ BudgetedVND局部强化
 
 当前pilot只用于验证基线接口、目标函数和时间窗语义是否对齐，不作为正式强基线结论。正式论文实验前还需要将该基线与成熟GVNS/LNS实现或忠实复现版本进行对齐。
 
+## Baseline Alignment Pilot
+
+新增：
+
+```matlab
+RunBaselineAlignmentPilot
+```
+
+在6个代表性SPB实例、100n FE和5个种子下，对齐比较：
+
+```text
+Random-key PSO
+LateOnly
+FB-CMPSO
+Clean GVNS pilot
+```
+
+Clean GVNS当前用于验证实例、目标函数、可行性判定和FE计数接口，不作为最终强基线结论。成熟GVNS/LNS实现仍需在正式论文实验阶段接入。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

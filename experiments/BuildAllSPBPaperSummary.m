@@ -54,17 +54,30 @@ for i=1:height(perInstance)
     % Primary: higher feasible rate. Secondary: lower feasible-run median gap.
     score=[-feasibleRates(:),FillNaN(gaps(:),inf)];
     [~,order]=sortrows(score,[1 2]);
-    ranks=zeros(1,3); ranks(order)=1:3; rankMatrix(i,:)=ranks;
+    sortedScore=score(order,:); ranks=zeros(1,3); pos=1;
+    while pos<=3
+        endPos=pos;
+        while endPos<3 && abs(sortedScore(endPos+1,1)-sortedScore(pos,1))<=1e-12 ...
+                && ((isinf(sortedScore(endPos+1,2)) && isinf(sortedScore(pos,2))) ...
+                || abs(sortedScore(endPos+1,2)-sortedScore(pos,2))<=1e-12)
+            endPos=endPos+1;
+        end
+        midRank=(pos+endPos)/2;
+        ranks(order(pos:endPos))=midRank;
+        pos=endPos+1;
+    end
+    rankMatrix(i,:)=ranks;
+    bestRank=min(ranks);
     rankRows{end+1,1}={perInstance.file(i),ranks(1),ranks(2),ranks(3), ...
-        order(1)==3,order(1)==2,order(1)==1}; %#ok<AGROW>
+        ranks(3)==bestRank,ranks(2)==bestRank,ranks(1)==bestRank}; %#ok<AGROW>
 end
 rankTable=cell2table(vertcat(rankRows{:}),'VariableNames',{ ...
     'file','rank_LateOnly','rank_LateTo2Opt','rank_LateToVND', ...
     'bestIsLateToVND','bestIsLateTo2Opt','bestIsLateOnly'});
 
 summary=table(methods',mean(rankMatrix,1)',median(rankMatrix,1)', ...
-    sum(rankMatrix==1,1)',sum(rankMatrix==2,1)',sum(rankMatrix==3,1)', ...
-    'VariableNames',{'method','averageRank','medianRank','nRank1','nRank2','nRank3'});
+    sum(rankMatrix==min(rankMatrix,[],2),1)',sum(rankMatrix==2,1)',sum(rankMatrix==3,1)', ...
+    'VariableNames',{'method','averageRank','medianRank','nBestIncludingTies','nRank2','nRank3'});
 % Paired instance-level W/T/L for median gaps.
 [wLate,tLate,lLate]=WinTieLoss(perInstance.medianGap_LateToVND,perInstance.medianGap_LateOnly);
 [w2,t2,l2]=WinTieLoss(perInstance.medianGap_LateToVND,perInstance.medianGap_LateTo2Opt);

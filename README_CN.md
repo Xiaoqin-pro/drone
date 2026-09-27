@@ -577,6 +577,26 @@ Average Rank
 
 避免不同实例可行seed数量不同造成pooled median的权重偏差。
 
+## Tie-aware SPB Paper Ranking
+
+`BuildAllSPBPaperSummary.m` 已更新为并列平均秩：
+
+```text
+完全相同的可行率和Gap使用average rank
+三种方法全部不可行时记为并列
+#Best使用including ties
+```
+
+当前30个SPB实例的instance-balanced结果：
+
+```text
+LateToVND average rank ≈ 1.68
+LateTo2Opt average rank = 2.00
+LateOnly average rank ≈ 2.32
+```
+
+这比简单的pooled median更适合论文呈现。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

@@ -15,3 +15,6 @@ Thumbs.db
 matlab.prj
 
 # Keep experiment results and source files under version control.
+# External phase-transition benchmark (large extracted data stays local)
+data/phase_transition_extracted/
+data/phase_transition_reference/

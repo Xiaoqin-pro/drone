@@ -13,7 +13,9 @@ for i=1:numel(files)
 end
 qualityMask=all(isfinite(gapMatrix),2);
 rankMatrix=nan(size(gapMatrix));
-for i=1:size(gapMatrix,1), rankMatrix(i,:)=TiedRanks(gapMatrix(i,:)); end
+for i=1:size(gapMatrix,1)
+    if qualityMask(i), rankMatrix(i,:)=TiedRanks(gapMatrix(i,:)); end
+end
 pairNames=["LateToVND_vs_LateOnly","LateToVND_vs_LateTo2Opt"];
 pairRows=cell(0,1);
 for p=1:2
@@ -25,7 +27,7 @@ end
 pairTable=cell2table(vertcat(pairRows{:}),'VariableNames',{'comparison','nPairs','wins','ties','losses','medianDelta','pValue','statistic'});
 pairTable.holmP=HolmAdjust(pairTable.pValue);
 % Friedman statistic over complete quality-evaluable rows.
-complete=all(isfinite(gapMatrix),2); completeGaps=gapMatrix(complete,:); completeRanks=rankMatrix(complete,:);
+complete=qualityMask; completeRanks=rankMatrix(complete,:);
 [friedmanStat,friedmanP]=FriedmanFallback(completeRanks);
 rankSummary=table(methods',mean(completeRanks,1)',median(completeRanks,1)', ...
     sum(completeRanks==1,1)', 'VariableNames',{'method','meanRank','medianRank','nRank1'});
@@ -50,11 +52,13 @@ if isfile(dynFile)
         for m=1:numel(ds)
             x=d(d.checkpoint_fe==cps(c)&d.strategy==ds(m),:); g=double(x.gap_to_reference); g=g(isfinite(g));
             dr{end+1,1}={ds(m),cps(c),height(x),mean(logical(x.is_feasible)),MedianOrNaN(double(x.total_late)), ...
-                MedianOrNaN(g),mean(logical(x.overtake_repair))}; %#ok<AGROW>
+                -100*MedianOrNaN(g),mean(logical(x.overtake_repair))}; %#ok<AGROW>
         end
     end
-    dynamic=cell2table(vertcat(dr{:}),'VariableNames',{'strategy','checkpointFE','nRuns','feasibleRate','medianLate','medianGap','overtakeRepairRate'});
+    dynamic=cell2table(vertcat(dr{:}),'VariableNames',{'strategy','checkpointFE','nRuns','feasibleRate','medianLate','medianRelativeImprovementPct','overtakeRepairRate'});
     results.dynamic=dynamic; writetable(dynamic,fullfile(outDir,'formal_dynamic_uav_statistics.csv'));
+    results.dynamicPaired=DynamicPairedAtFinalCheckpoint(d);
+    writetable(results.dynamicPaired,fullfile(outDir,'formal_dynamic_uav_paired_2500.csv'));
 end
 save(fullfile(outDir,'formal_statistics_result.mat'),'results');
 fprintf('Formal statistics generated.\n');
@@ -79,8 +83,11 @@ end
 end
 function pAdj=HolmAdjust(p)
 [sorted,order]=sort(p); pAdj=nan(size(p)); m=numel(p);
-for i=1:m, pAdj(order(i))=min(1,(m-i+1)*sorted(i)); end
-for i=m-1:-1:1, pAdj(order(i))=max(pAdj(order(i)),pAdj(order(i+1))); end
+runningMax=0;
+for i=1:m
+    runningMax=max(runningMax,(m-i+1)*sorted(i));
+    pAdj(order(i))=min(1,runningMax);
+end
 end
 function value=MedianOrNaN(x)
 x=x(isfinite(x)); if isempty(x),value=NaN;else,value=median(x);end
@@ -88,7 +95,37 @@ end
 function [stat,p]=FriedmanFallback(ranks)
 n=size(ranks,1); k=size(ranks,2); R=sum(ranks,1);
 stat=12/(n*k*(k+1))*sum(R.^2)-3*n*(k+1);
-try, p=1-chi2cdf(stat,k-1); catch, p=NaN; end
+tieSum=0;
+for row=1:n
+    [~,~,group]=unique(ranks(row,:));
+    counts=accumarray(group(:),1);
+    tieSum=tieSum+sum(counts.^3-counts);
+end
+correction=1-tieSum/(n*(k^3-k));
+if correction<=0, stat=NaN; p=NaN; return; end
+stat=stat/correction;
+try, p=chi2cdf(stat,k-1,'upper'); catch, p=NaN; end
 end
 
 
+
+function paired=DynamicPairedAtFinalCheckpoint(d)
+cp=max(d.checkpoint_fe);
+a=d(d.checkpoint_fe==cp & d.strategy=="FB-CMPSO",:);
+b=d(d.checkpoint_fe==cp & d.strategy=="WarmPSO",:);
+keysA=string(a.dataset)+"/"+string(a.level)+"/"+string(a.instance)+"/"+string(a.seed_index);
+keysB=string(b.dataset)+"/"+string(b.level)+"/"+string(b.instance)+"/"+string(b.seed_index);
+[shared,ia,ib]=intersect(keysA,keysB,'stable');
+a=a(ia,:); b=b(ib,:);
+valid=logical(a.is_feasible)&logical(b.is_feasible);
+delta=double(a.fitness(valid))-double(b.fitness(valid));
+[pRun,~]=SafeSignrank(delta);
+scenario=string(a.dataset(valid))+"/"+string(a.level(valid))+"/"+string(a.instance(valid));
+scenarios=unique(scenario,'stable'); medians=nan(numel(scenarios),1);
+for i=1:numel(scenarios), medians(i)=median(delta(scenario==scenarios(i))); end
+[pScenario,~]=SafeSignrank(medians);
+paired=table(cp,numel(shared),sum(valid),numel(scenarios),median(delta), ...
+    pRun,median(medians),pScenario, ...
+    'VariableNames',{'checkpointFE','sharedRuns','bothFeasibleRuns','scenarioClusters', ...
+    'medianPairedCostDelta','exploratoryRunLevelP','medianScenarioDelta','scenarioLevelP'});
+end

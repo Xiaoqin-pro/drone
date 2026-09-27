@@ -1,0 +1,4 @@
+method,averageRank,medianRank,nRank1,nRank2,nRank3
+LateOnly,1.96666666666667,2,12,7,11
+LateTo2Opt,2,2,5,20,5
+LateToVND,2.03333333333333,2,13,3,14

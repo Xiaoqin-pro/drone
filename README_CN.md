@@ -556,6 +556,27 @@ LateToVND
 
 结果用于从开发集进入正式benchmark阶段，重点报告可行率、FirstFeasibleFE、Gap和Phase-II指标。
 
+## SPB Instance-Balanced Paper Summary
+
+新增：
+
+```matlab
+BuildAllSPBPaperSummary
+```
+
+该脚本对全部30个SPB实例先按实例聚合seed，再计算：
+
+```text
+每实例FeasibleRate
+每实例median/IQR Gap
+每实例median PhaseGain
+VND vs LateOnly / LateTo2Opt的实例级W/T/L
+Average Rank
+#Rank-1
+```
+
+避免不同实例可行seed数量不同造成pooled median的权重偏差。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

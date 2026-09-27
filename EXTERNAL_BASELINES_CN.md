@@ -40,3 +40,19 @@ external_baselines/TSPTW-master/bin/gvns_adapter.exe
 ```
 
 The adapter accepts an instance path, iteration count, and seed, and prints cost, penalty, and route. A direct run on a 101-node Solomon file was intentionally stopped because the original implementation is computationally expensive at that size; this is a pilot/integration check, not a formal baseline result.
+
+
+## DD-LNS integration status
+
+The DD-LNS supplementary repository has been downloaded locally. Its six representative SPB files were checked against the project's local SPB files using SHA-256; all six matched byte-for-byte:
+
+```text
+rc_201.1.txt
+rc_201.3.txt
+rc_202.1.txt
+rc_204.2.txt
+rc_207.3.txt
+rc_208.3.txt
+```
+
+The DD-LNS source is Rust-based. Cargo is not currently installed in the MATLAB/Windows environment, so compilation and runtime alignment are pending environment setup. The benchmark identity check is already complete; no numerical DD-LNS result is being claimed yet.

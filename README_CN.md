@@ -667,6 +667,24 @@ Median final lateness
 
 当前筛选优先使用统一200n；由于boundary-active候选不足4个，自动切换到统一500n，得到3个n=21候选实例。n=31在当前pilot预算下仍属于feasibility-limited stress cases，不进入Phase-II质量主表。
 
+## Selected Phase-transition Mechanism Validation
+
+新增：
+
+```matlab
+RunPhaseTransitionSelectedMechanism
+```
+
+在筛选出的3个n=21 boundary-active实例上，使用统一500n预算和10个种子比较：
+
+```text
+LateOnly
+LateTo2Opt
+LateToVND
+```
+
+该实验用于外部验证Phase-II趋势；n=31实例仍作为feasibility-limited stress cases，不纳入当前Phase-II质量主表。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

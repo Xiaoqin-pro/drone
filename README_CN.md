@@ -478,6 +478,26 @@ VND各邻域接受次数
 
 这组实验用于最终决定保留LateTo2Opt还是LateToVND。
 
+## Competitive Neighborhood Fork 审计
+
+新增：
+
+```matlab
+RunCompetitiveNeighborhoodForkAudit
+```
+
+该实验从相同first-feasible路线出发，比较：
+
+```text
+2-opt
+顺序BudgetedVND
+CompetitiveNeighborhoodSearch
+```
+
+Competitive版本让2-opt、Swap、Relocate从同一个incumbent独立竞争，每个邻域使用相同的 `n-1` FE，最后只接受本轮最好的候选。
+
+当前结果用于判断顺序VND是否应替换为竞争式异构邻域，而不是增加新的算法机制。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

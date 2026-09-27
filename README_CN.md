@@ -770,6 +770,18 @@ Dynamic UAV checkpoint summary
 
 SPB质量统计只使用quality-evaluable实例；不可行实例不被强行赋予Gap。动态UAV统计按Repair/WarmPSO/FB-CMPSO和FE checkpoint汇总。
 
+## DD-LNS Initial-Solution Alignment
+
+新增：
+
+```matlab
+RunDDLNSInitialAlignment
+```
+
+DD-LNS现在使用其公开的SolomonPotvinBengio initial solution protocol，在6个代表实例、5个seed、5秒time limit下运行，并将输出路线回灌到当前 `EvaluateTSPTWRoute`。
+
+30条运行中，路线、可行性和tour cost语义已经完成对齐；输出小数误差来自DD-LNS表格只打印两位小数。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

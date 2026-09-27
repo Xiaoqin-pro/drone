@@ -67,17 +67,30 @@ for i=1:height(perInstance)
         pos=endPos+1;
     end
     rankMatrix(i,:)=ranks;
+    qualityEvaluable=any(isfinite(gaps));
     bestRank=min(ranks);
+    if qualityEvaluable
+        bestFlags=[ranks(3)==bestRank,ranks(2)==bestRank,ranks(1)==bestRank];
+    else
+        bestFlags=[false,false,false];
+    end
     rankRows{end+1,1}={perInstance.file(i),ranks(1),ranks(2),ranks(3), ...
-        ranks(3)==bestRank,ranks(2)==bestRank,ranks(1)==bestRank}; %#ok<AGROW>
+        qualityEvaluable,bestFlags(1),bestFlags(2),bestFlags(3)}; %#ok<AGROW>
 end
 rankTable=cell2table(vertcat(rankRows{:}),'VariableNames',{ ...
-    'file','rank_LateOnly','rank_LateTo2Opt','rank_LateToVND', ...
+    'file','rank_LateOnly','rank_LateTo2Opt','rank_LateToVND','qualityEvaluable', ...
     'bestIsLateToVND','bestIsLateTo2Opt','bestIsLateOnly'});
 
-summary=table(methods',mean(rankMatrix,1)',median(rankMatrix,1)', ...
-    sum(rankMatrix==min(rankMatrix,[],2),1)',sum(rankMatrix==2,1)',sum(rankMatrix==3,1)', ...
-    'VariableNames',{'method','averageRank','medianRank','nBestIncludingTies','nRank2','nRank3'});
+qualityMask=rankTable.qualityEvaluable;
+qualityRanks=rankMatrix(qualityMask,:);
+summary=table(methods',mean(qualityRanks,1)',median(qualityRanks,1)', ...
+    sum(rankTable{qualityMask,{'bestIsLateOnly','bestIsLateTo2Opt','bestIsLateToVND'}},1)', ...
+    sum(qualityRanks==2,1)',sum(qualityRanks==3,1)', ...
+    'VariableNames',{'method','averageRankQualityEvaluable','medianRankQualityEvaluable', ...
+    'nBestIncludingTies','nRank2','nRank3'});
+noFeasibleAny=~qualityMask;
+meta=table(sum(qualityMask),sum(noFeasibleAny),'VariableNames', ...
+    {'qualityEvaluableInstanceCount','noFeasibleAnyInstanceCount'});
 % Paired instance-level W/T/L for median gaps.
 [wLate,tLate,lLate]=WinTieLoss(perInstance.medianGap_LateToVND,perInstance.medianGap_LateOnly);
 [w2,t2,l2]=WinTieLoss(perInstance.medianGap_LateToVND,perInstance.medianGap_LateTo2Opt);
@@ -85,11 +98,12 @@ pairSummary=table(["LateToVND_vs_LateOnly";"LateToVND_vs_LateTo2Opt"], ...
     [wLate;w2],[tLate;t2],[lLate;l2], ...
     'VariableNames',{'comparison','wins','ties','losses'});
 
-results.perInstance=perInstance; results.rankTable=rankTable; results.summary=summary; results.pairSummary=pairSummary;
+results.perInstance=perInstance; results.rankTable=rankTable; results.summary=summary; results.meta=meta; results.pairSummary=pairSummary;
 outDir=fullfile(root,'results');
 writetable(perInstance,fullfile(outDir,'all_spb_instance_balanced_summary.csv'));
 writetable(rankTable,fullfile(outDir,'all_spb_instance_ranks.csv'));
 writetable(summary,fullfile(outDir,'all_spb_method_rank_summary.csv'));
+writetable(meta,fullfile(outDir,'all_spb_rank_meta.csv'));
 writetable(pairSummary,fullfile(outDir,'all_spb_instance_paired_wtl.csv'));
 save(fullfile(outDir,'all_spb_paper_summary.mat'),'results');
 fprintf('Paper summary generated for %d SPB instances.\n',height(perInstance));

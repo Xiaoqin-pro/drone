@@ -597,6 +597,37 @@ LateOnly average rank ≈ 2.32
 
 这比简单的pooled median更适合论文呈现。
 
+## Quality-evaluable SPB Ranking
+
+论文汇总现在把：
+
+```text
+全部方法不可行的实例
+```
+
+从 `#Best` 统计中排除，单独记录为：
+
+```text
+No feasible solution found by any method
+```
+
+当前30个SPB实例中：
+
+```text
+24个实例至少有一种方法产生有限Gap
+6个实例所有方法均未找到可行解
+```
+
+在24个quality-evaluable实例上，tie-aware average rank为：
+
+```text
+LateToVND：约1.60
+LateTo2Opt：2.00
+LateOnly：约2.40
+```
+
+`nBestIncludingTies`只在quality-evaluable实例上统计。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

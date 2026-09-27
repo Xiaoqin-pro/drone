@@ -12,22 +12,23 @@ for i=1:numel(files)
         for m=1:numel(methods)
             rng(seed,'twister'); options=struct('nPop',20,'maxFE',budget,'latePenalty',1000, ...
                 'localSearchMode','state-switch','localSearchFE',3*q,'restorationFE',q,'intensificationFE',3*q,'silent',true);
+            requestedTransition=NaN;
             if methods(m)=="Scheduled50"
-                options.localSearchMode='scheduled-vnd'; options.transitionFE=round(0.50*budget);
+                requestedTransition=round(0.50*budget); options.localSearchMode='scheduled-vnd'; options.transitionFE=requestedTransition;
             elseif methods(m)=="Scheduled75"
-                options.localSearchMode='scheduled-vnd'; options.transitionFE=round(0.75*budget);
+                requestedTransition=round(0.75*budget); options.localSearchMode='scheduled-vnd'; options.transitionFE=requestedTransition;
             end
             [best,~,stats]=RandomKeyTSPTWPSO(instance,options,[]); %#ok<ASGLU>
             first=stats.firstFeasibleFE; if isinf(first), first=NaN; end
             phase=stats.phaseSwitchFE; if isinf(phase), phase=NaN; end
-            rows{end+1,1}={files(i),n,methods(m),s,budget,best.Detail.isFeasible, ...
+            rows{end+1,1}={files(i),n,methods(m),s,budget,requestedTransition,best.Detail.isFeasible, ...
                 first,phase,best.Detail.totalLate,best.Detail.tourCost,stats.phaseGain}; %#ok<AGROW>
         end
     end
     fprintf('%s completed.\n',files(i));
 end
 summary=cell2table(vertcat(rows{:}),'VariableNames',{ ...
-    'file','nCustomers','method','seed','budget_fe','is_feasible','first_feasible_fe', ...
+    'file','nCustomers','method','seed','budget_fe','requested_transition_fe','is_feasible','first_feasible_fe', ...
     'phase_switch_fe','total_late','final_cost','phase_gain'});
 results.summary=summary; results.methods=methods; results.seeds=seeds;
 writetable(summary,fullfile(root,'results','boundary_timing_sensitivity_summary.csv'));

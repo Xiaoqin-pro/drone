@@ -852,6 +852,16 @@ Scheduled 75% trigger
 
 该实验用于验证first-feasible作为无参数、问题状态驱动的Phase-II触发点，而不是声称它是全局最优切换时机。
 
+## Corrected Boundary Timing Audit
+
+Boundary timing control has been corrected so that scheduled triggers use: \n
+```text
+FE < transitionFE  → Late restoration
+FE >= transitionFE → Budgeted VND
+```
+
+The output now records both `requested_transition_fe` and `phase_switch_fe`. This distinguishes state-driven FirstFeasible switching from fixed 50%/75% schedule controls.
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

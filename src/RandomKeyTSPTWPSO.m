@@ -80,8 +80,10 @@ localSearchTwoOptFE = 0;
 restorationRelocateFE = 0; restorationRelocateAccept = 0;
 vndTwoOptAccept = 0; vndSwapAccept = 0; vndRelocateAccept = 0;
 iteration = 0; lastMode = "";
+scheduledMode=string(options.localSearchMode)=="scheduled-vnd";
 boundaryReached = GlobalBest.Detail.isFeasible;
-if string(options.localSearchMode)=="scheduled-vnd", boundaryReached=false; end
+if scheduledMode, boundaryReached=false; end
+phaseIIActive=boundaryReached;
 if boundaryReached, boundaryFE=firstFeasibleFE; else, boundaryFE=inf; end
 phaseSwitchCost=NaN; phaseSwitchFE=inf;
 
@@ -121,19 +123,27 @@ while functionEvaluations<options.maxFE
         end
     end
 
-    wasBoundaryReached=boundaryReached;
-    if ~boundaryReached && GlobalBest.Detail.isFeasible
-        boundaryReached=true; boundaryFE=functionEvaluations;
+    wasPhaseIIActive=phaseIIActive;
+    if scheduledMode
+        phaseIIActive=functionEvaluations>=options.transitionFE;
+    elseif ~boundaryReached && GlobalBest.Detail.isFeasible
+        boundaryReached=true; boundaryFE=functionEvaluations; phaseIIActive=true;
     end
     if options.localSearchFE>0 && functionEvaluations<options.maxFE ...
             && mod(iteration,options.localSearchEvery)==0
         remaining = options.maxFE-functionEvaluations;
         searchOptions = options;
-        phaseBeforeSearch=wasBoundaryReached;
+        phaseBeforeSearch=wasPhaseIIActive;
         searchMode = string(options.localSearchMode);
         localBudget = options.localSearchFE;
-        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive","state-switch-progressive","scheduled-vnd"])
-            if boundaryReached
+        if scheduledMode
+            if phaseIIActive
+                searchMode="budgeted-vnd"; localBudget=options.intensificationFE;
+            else
+                searchMode="late"; localBudget=options.restorationFE;
+            end
+        elseif any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive","state-switch-progressive"])
+            if phaseIIActive
                 if searchMode=="state-switch-global"
                     searchMode="global";
                 elseif searchMode=="state-switch-2opt"
@@ -158,7 +168,7 @@ while functionEvaluations<options.maxFE
         searchOptions.mode = char(searchMode);
         searchOptions.maxFE = min(localBudget,remaining);
         routeBeforeLocal=GlobalBest.Detail.route;
-        if boundaryReached && isnan(phaseSwitchCost)
+        if phaseIIActive && isnan(phaseSwitchCost)
             phaseSwitchCost=GlobalBest.Detail.tourCost;
             phaseSwitchFE=functionEvaluations;
         end
@@ -247,7 +257,8 @@ stats.iterations = iteration;
 stats.firstFeasibleFE = firstFeasibleFE;
 stats.firstFeasibleRoute = firstFeasibleRoute;
 stats.firstFeasibleDetail = firstFeasibleDetail;
-stats.boundaryReached=boundaryReached; stats.boundaryFE=boundaryFE;
+stats.boundaryReached=boundaryReached; stats.boundaryFE=boundaryFE; stats.phaseIIActive=phaseIIActive;
+stats.requestedTransitionFE=options.transitionFE;
 stats.phaseSwitchFE=phaseSwitchFE;
 if isnan(phaseSwitchCost) && boundaryReached, phaseSwitchCost=GlobalBest.Detail.tourCost; phaseSwitchFE=functionEvaluations; end
 stats.phaseSwitchCost=phaseSwitchCost;

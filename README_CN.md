@@ -834,6 +834,24 @@ results/external_spb_comparison_result.mat
 
 DD-LNS不与内部方法混入同一个FE Average Rank，而是单独报告可行率、Gap、BKS hits、time-to-best和wall time。
 
+## Boundary Timing Sensitivity
+
+新增：
+
+```matlab
+RunBoundaryTimingSensitivity
+```
+
+在9个SPB实例、10个种子、100n预算下比较：
+
+```text
+FirstFeasible trigger
+Scheduled 50% trigger
+Scheduled 75% trigger
+```
+
+该实验用于验证first-feasible作为无参数、问题状态驱动的Phase-II触发点，而不是声称它是全局最优切换时机。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

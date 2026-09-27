@@ -81,6 +81,7 @@ restorationRelocateFE = 0; restorationRelocateAccept = 0;
 vndTwoOptAccept = 0; vndSwapAccept = 0; vndRelocateAccept = 0;
 iteration = 0; lastMode = "";
 boundaryReached = GlobalBest.Detail.isFeasible;
+if string(options.localSearchMode)=="scheduled-vnd", boundaryReached=false; end
 if boundaryReached, boundaryFE=firstFeasibleFE; else, boundaryFE=inf; end
 phaseSwitchCost=NaN; phaseSwitchFE=inf;
 
@@ -131,7 +132,7 @@ while functionEvaluations<options.maxFE
         phaseBeforeSearch=wasBoundaryReached;
         searchMode = string(options.localSearchMode);
         localBudget = options.localSearchFE;
-        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive","state-switch-progressive"])
+        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive","state-switch-progressive","scheduled-vnd"])
             if boundaryReached
                 if searchMode=="state-switch-global"
                     searchMode="global";
@@ -141,6 +142,8 @@ while functionEvaluations<options.maxFE
                     searchMode="competitive";
                 elseif searchMode=="state-switch-progressive"
                     searchMode="progressive";
+                elseif searchMode=="scheduled-vnd"
+                    searchMode="budgeted-vnd";
                 else
                     searchMode="budgeted-vnd";
                 end
@@ -269,7 +272,7 @@ defaults = struct('nPop',20,'maxFE',1000,'w',1.0,'wdamp',0.99, ...
     'waitPenalty',0,'localSearchMode','none','localSearchFE',0, ...
     'localSearchEvery',1,'silent',true, ...
     'feedbackEnabled',false,'feedbackLearningRate',0.35,'feedbackDecay',0.80, ...
-    'restorationFE',max(1,instance.nCustomers-1),'intensificationFE',3*max(1,instance.nCustomers-1));
+    'restorationFE',max(1,instance.nCustomers-1),'intensificationFE',3*max(1,instance.nCustomers-1),'transitionFE',inf);
 fields = fieldnames(defaults);
 for k = 1:numel(fields)
     field = fields{k};

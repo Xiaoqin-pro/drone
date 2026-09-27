@@ -131,7 +131,7 @@ while functionEvaluations<options.maxFE
         phaseBeforeSearch=wasBoundaryReached;
         searchMode = string(options.localSearchMode);
         localBudget = options.localSearchFE;
-        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive"])
+        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt","state-switch-competitive","state-switch-progressive"])
             if boundaryReached
                 if searchMode=="state-switch-global"
                     searchMode="global";
@@ -139,6 +139,8 @@ while functionEvaluations<options.maxFE
                     searchMode="2opt";
                 elseif searchMode=="state-switch-competitive"
                     searchMode="competitive";
+                elseif searchMode=="state-switch-progressive"
+                    searchMode="progressive";
                 else
                     searchMode="budgeted-vnd";
                 end
@@ -157,9 +159,10 @@ while functionEvaluations<options.maxFE
             phaseSwitchCost=GlobalBest.Detail.tourCost;
             phaseSwitchFE=functionEvaluations;
         end
-        if searchMode=="budgeted-vnd"
+        if any(searchMode==["budgeted-vnd","progressive"])
             vndOptions=searchOptions;
             vndOptions.neighborhoodOrder=["2opt","swap","relocate"];
+            vndOptions.returnOnImprovement=(searchMode=="progressive");
             [candidateRoute,candidateDetail,searchStats] = ...
                 BudgetedVND(routeBeforeLocal,instance,searchOptions.maxFE, ...
                 GlobalBest.Detail,vndOptions);

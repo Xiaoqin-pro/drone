@@ -11,6 +11,9 @@ else
     bestDetail=initialDetail; bestCost=initialDetail.cost; functionEvaluations=0;
 end
 if nargin<3 || isempty(maxFE), maxFE=inf; end
+if ~isfield(options,'returnOnImprovement') || isempty(options.returnOnImprovement)
+    options.returnOnImprovement=false;
+end
 if ~isfield(options,'neighborhoodQuota') || isempty(options.neighborhoodQuota)
     options.neighborhoodQuota=max(1,instance.nCustomers-1);
 end
@@ -45,6 +48,7 @@ while k<=numel(neighborhoodOrder) && functionEvaluations<maxFE
         bestRoute=localRoute; bestDetail=localDetail; bestCost=localCost;
         improvementCount=improvementCount+1; moves(end+1,1)=localMove; %#ok<AGROW>
         stats=AddNeighborhoodAccept(stats,neighborhood);
+        if options.returnOnImprovement, break; end
         k=1;
     else
         k=k+1;
@@ -54,6 +58,7 @@ stats.functionEvaluations=functionEvaluations;
 stats.improvementCount=improvementCount;
 stats.moves=moves;
 stats.neighborhoodOrder=neighborhoodOrder;
+stats.returnOnImprovement=options.returnOnImprovement;
 end
 
 function stats=AddNeighborhoodFE(stats,neighborhood)

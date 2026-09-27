@@ -498,6 +498,27 @@ Competitive版本让2-opt、Swap、Relocate从同一个incumbent独立竞争，�
 
 当前结果用于判断顺序VND是否应替换为竞争式异构邻域，而不是增加新的算法机制。
 
+## Competitive V2 与 Progressive Boundary 审计
+
+新增：
+
+```matlab
+RunCompetitiveNeighborhoodForkAuditV2
+RunProgressiveBoundaryDecision100n
+```
+
+V2在相同 `3(n-1)` FE上比较Repeated2Opt、BudgetedVND和Competitive，避免之前的 `q vs 3q` 预算混杂。
+
+Progressive版本测试：
+
+```text
+2-opt有改善：立即交还PSO
+2-opt停滞：升级到Swap
+Swap仍停滞：升级到Relocate
+```
+
+当前结果显示Progressive在部分过渡实例上有优势，但9个SPB实例总体仍未稳定超过顺序BudgetedVND。因此暂时保留BudgetedVND作为主候选，Progressive和Competitive作为机制审计结果，不再继续增加Phase-II结构。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

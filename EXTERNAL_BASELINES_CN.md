@@ -29,3 +29,14 @@ node_id x y demand ready_time due_time service_time
 ```
 
 当前GVNS只完成了编译和接口pilot，不作为正式强基线结论。
+
+
+## Windows adapter
+
+A local `adapter_main.cpp` was added to the ignored checkout and compiled as:
+
+```text
+external_baselines/TSPTW-master/bin/gvns_adapter.exe
+```
+
+The adapter accepts an instance path, iteration count, and seed, and prints cost, penalty, and route. A direct run on a 101-node Solomon file was intentionally stopped because the original implementation is computationally expensive at that size; this is a pilot/integration check, not a formal baseline result.

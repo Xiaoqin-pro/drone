@@ -12,7 +12,7 @@ functionEvaluations=options.initialEvaluations;
 if functionEvaluations==0, functionEvaluations=1; end
 firstFeasibleFE=inf;
 if bestDetail.isFeasible, firstFeasibleFE=functionEvaluations; end
-bestRoute=route; iteration=0; noImprovement=0;
+bestRoute=route; iteration=0; noImprovement=0; restartCount=0;
 history.FE=zeros(0,1); history.Cost=zeros(0,1); history.TourCost=zeros(0,1);
 history.Late=zeros(0,1); history.IsFeasible=false(0,1); history.Neighborhood=zeros(0,1);
 while functionEvaluations<options.maxFE
@@ -22,18 +22,18 @@ while functionEvaluations<options.maxFE
         if functionEvaluations>=options.maxFE, break; end
         [shaken,shakeFE]=ShakeRoute(bestRoute,k,instance,options);
         functionEvaluations=functionEvaluations+shakeFE;
-        if shakeFE==0, break; end
         remaining=options.maxFE-functionEvaluations;
         if remaining<=0, break; end
         localOptions=options;
         localOptions.neighborhoodQuota=max(1,n-1);
         localOptions.neighborhoodOrder=options.neighborhoodOrder;
         localBudget=min(options.localSearchFE,remaining);
+        localStartFE=functionEvaluations;
         [candidateRoute,candidateDetail,localStats]=BudgetedVND( ...
             shaken,instance,localBudget,[],localOptions);
         functionEvaluations=functionEvaluations+localStats.functionEvaluations;
-        if isinf(firstFeasibleFE) && candidateDetail.isFeasible
-            firstFeasibleFE=functionEvaluations;
+        if isinf(firstFeasibleFE) && isfinite(localStats.firstFeasibleEvaluation)
+            firstFeasibleFE=localStartFE+localStats.firstFeasibleEvaluation;
         end
         if IsBetter(candidateDetail.cost,candidateDetail,bestCost,bestDetail)
             bestRoute=candidateRoute; bestDetail=candidateDetail; bestCost=candidateDetail.cost;
@@ -50,7 +50,10 @@ while functionEvaluations<options.maxFE
     history.Late(end+1,1)=bestDetail.totalLate;
     history.IsFeasible(end+1,1)=bestDetail.isFeasible;
     if numel(history.Neighborhood)<numel(history.FE), history.Neighborhood(end+1,1)=0; end
-    if noImprovement>=options.maxNoImprovement, break; end
+    if noImprovement>=options.maxNoImprovement
+        noImprovement=0;
+        restartCount=restartCount+1;
+    end
 end
 BestSol.Route=bestRoute; BestSol.Cost=bestCost; BestSol.Detail=bestDetail;
 stats.functionEvaluations=functionEvaluations;
@@ -58,6 +61,7 @@ stats.firstFeasibleFE=firstFeasibleFE;
 stats.iterations=iteration;
 stats.initialEvaluations=options.initialEvaluations;
 stats.isFeasible=bestDetail.isFeasible;
+stats.restartCount=restartCount;
 end
 
 function route=InitialRoute(instance,options)
@@ -88,7 +92,8 @@ for move=1:k
         route=[route(1:j-1),node,route(j:end)];
     end
 end
-fe=1;
+% Shaking only changes a permutation; no objective evaluation is performed here.
+fe=0;
 end
 
 function options=FillOptions(options,instance)
@@ -114,3 +119,4 @@ else
     tf=false;
 end
 end
+

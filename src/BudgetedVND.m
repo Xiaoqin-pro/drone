@@ -38,6 +38,10 @@ while k<=numel(neighborhoodOrder) && functionEvaluations<maxFE
         if functionEvaluations>=maxFE, break; end
         [candidateCost,candidateDetail]=EvaluateTSPTWRoute(candidates{q},instance,options);
         functionEvaluations=functionEvaluations+1;
+        if isinf(stats.firstFeasibleEvaluation) && candidateDetail.isFeasible
+            stats.firstFeasibleEvaluation=functionEvaluations;
+            stats.firstFeasibleRoute=candidates{q}; stats.firstFeasibleDetail=candidateDetail;
+        end
         stats=AddNeighborhoodFE(stats,neighborhood);
         if IsBetter(candidateCost,candidateDetail,localCost,localDetail)
             localRoute=candidates{q}; localDetail=candidateDetail;

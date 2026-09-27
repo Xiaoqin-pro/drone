@@ -749,6 +749,27 @@ FB-CMPSO在动态事件后的搜索结构为：
 
 当前使用8个动态三维场景、10个种子和500/1000/1500/2500 FE检查点。
 
+## Formal Statistics
+
+新增：
+
+```matlab
+BuildFormalStatistics
+```
+
+当前正式统计输出：
+
+```text
+SPB instance-level median/IQR
+FeasibleRate
+Wilcoxon signed-rank
+Holm correction
+Friedman rank statistic
+Dynamic UAV checkpoint summary
+```
+
+SPB质量统计只使用quality-evaluable实例；不可行实例不被强行赋予Gap。动态UAV统计按Repair/WarmPSO/FB-CMPSO和FE checkpoint汇总。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

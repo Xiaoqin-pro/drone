@@ -685,6 +685,25 @@ LateToVND
 
 该实验用于外部验证Phase-II趋势；n=31实例仍作为feasibility-limited stress cases，不纳入当前Phase-II质量主表。
 
+## GVNS Baseline Pilot
+
+新增：
+
+```matlab
+RunGVNSBaselinePilot
+```
+
+当前GVNS为仓库内的可复现实验基线原型，使用：
+
+```text
+结构化due-time初始化
+随机shaking
+BudgetedVND局部强化
+统一TSPTW评价器和FE计数
+```
+
+当前pilot只用于验证基线接口、目标函数和时间窗语义是否对齐，不作为正式强基线结论。正式论文实验前还需要将该基线与成熟GVNS/LNS实现或忠实复现版本进行对齐。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

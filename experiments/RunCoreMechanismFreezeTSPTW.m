@@ -7,7 +7,7 @@ benchmarkDir=fullfile(root,'data','tsp_tw_benchmark');
 manifest=readtable(fullfile(benchmarkDir,'manifest.csv'),'Delimiter',',','TextType','string');
 reference=ReadTSPTWReferenceSolutions(fullfile(root,'data','tsp_tw_raw','best_known', ...
     'SolomonPotvinBengio-best-known-traveltime.txt'));
-methods=["PSO","Global","LateOnly","Propagation","StateSwitch"];
+methods=["PSO","LateOnly","LateToGlobal","LateTo2Opt","StateSwitch"];
 seeds=1:10; budgetsFactor=[25 50 100]; rows=cell(0,1);
 for i=1:height(manifest)
     instance=ReadTSPTWInstance(fullfile(benchmarkDir,manifest.file(i)));
@@ -21,12 +21,12 @@ for i=1:height(manifest)
                 rng(seed,'twister');
                 options=struct('nPop',20,'maxFE',budget,'latePenalty',1000, ...
                     'localSearchFE',0,'localSearchMode','none','silent',true);
-                if methods(m)=="Global"
-                    options.localSearchMode='global'; options.localSearchFE=max(1,instance.nCustomers-1);
-                elseif methods(m)=="LateOnly"
+                if methods(m)=="LateOnly"
                     options.localSearchMode='late'; options.localSearchFE=max(1,instance.nCustomers-1);
-                elseif methods(m)=="Propagation"
-                    options.localSearchMode='propagation'; options.localSearchFE=max(1,instance.nCustomers-1);
+                elseif methods(m)=="LateToGlobal"
+                    options.localSearchMode='state-switch-global'; options.localSearchFE=max(1,instance.nCustomers-1);
+                elseif methods(m)=="LateTo2Opt"
+                    options.localSearchMode='state-switch-2opt'; options.localSearchFE=max(1,instance.nCustomers-1);
                 elseif methods(m)=="StateSwitch"
                     options.localSearchMode='state-switch'; options.localSearchFE=3*max(1,instance.nCustomers-1);
                 end

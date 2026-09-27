@@ -11,20 +11,30 @@ else
     bestDetail=initialDetail; bestCost=initialDetail.cost; functionEvaluations=0;
 end
 if nargin<3 || isempty(maxFE), maxFE=inf; end
+if ~isfield(options,'neighborhoodQuota') || isempty(options.neighborhoodQuota)
+    options.neighborhoodQuota=max(1,instance.nCustomers-1);
+end
 if ~isfield(options,'neighborhoodOrder') || isempty(options.neighborhoodOrder)
     neighborhoodOrder=["2opt","swap","relocate"];
 else
     neighborhoodOrder=string(options.neighborhoodOrder);
 end
 bestRoute=route(:)'; k=1; improvementCount=0; moves=strings(0,1);
+stats.twoOptFE=0; stats.swapFE=0; stats.relocateFE=0;
+stats.twoOptAccept=0; stats.swapAccept=0; stats.relocateAccept=0;
+stats.neighborhoodVisits=zeros(numel(neighborhoodOrder),1);
 while k<=numel(neighborhoodOrder) && functionEvaluations<maxFE
-    [candidates,moveNames]=BuildCandidates(bestRoute,neighborhoodOrder(k));
+    neighborhood=neighborhoodOrder(k);
+    [candidates,moveNames]=BuildCandidates(bestRoute,neighborhood);
     order=randperm(numel(candidates)); improved=false;
+    stats.neighborhoodVisits(k)=stats.neighborhoodVisits(k)+1;
+    localQuota=min(options.neighborhoodQuota,maxFE-functionEvaluations);
     localRoute=bestRoute; localDetail=bestDetail; localCost=bestCost; localMove="";
-    for q=order
+    for q=order(1:min(numel(order),localQuota))
         if functionEvaluations>=maxFE, break; end
         [candidateCost,candidateDetail]=EvaluateTSPTWRoute(candidates{q},instance,options);
         functionEvaluations=functionEvaluations+1;
+        stats=AddNeighborhoodFE(stats,neighborhood);
         if IsBetter(candidateCost,candidateDetail,localCost,localDetail)
             localRoute=candidates{q}; localDetail=candidateDetail;
             localCost=candidateCost; localMove=moveNames(q); improved=true;
@@ -33,6 +43,7 @@ while k<=numel(neighborhoodOrder) && functionEvaluations<maxFE
     if improved
         bestRoute=localRoute; bestDetail=localDetail; bestCost=localCost;
         improvementCount=improvementCount+1; moves(end+1,1)=localMove; %#ok<AGROW>
+        stats=AddNeighborhoodAccept(stats,neighborhood);
         k=1;
     else
         k=k+1;
@@ -42,6 +53,22 @@ stats.functionEvaluations=functionEvaluations;
 stats.improvementCount=improvementCount;
 stats.moves=moves;
 stats.neighborhoodOrder=neighborhoodOrder;
+end
+
+function stats=AddNeighborhoodFE(stats,neighborhood)
+switch lower(char(neighborhood))
+    case '2opt', stats.twoOptFE=stats.twoOptFE+1;
+    case 'swap', stats.swapFE=stats.swapFE+1;
+    case 'relocate', stats.relocateFE=stats.relocateFE+1;
+end
+end
+
+function stats=AddNeighborhoodAccept(stats,neighborhood)
+switch lower(char(neighborhood))
+    case '2opt', stats.twoOptAccept=stats.twoOptAccept+1;
+    case 'swap', stats.swapAccept=stats.swapAccept+1;
+    case 'relocate', stats.relocateAccept=stats.relocateAccept+1;
+end
 end
 
 function [candidates,moves]=BuildCandidates(route,neighborhood)
@@ -87,3 +114,4 @@ else
     tf=false;
 end
 end
+

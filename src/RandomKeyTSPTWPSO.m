@@ -125,9 +125,15 @@ while functionEvaluations<options.maxFE
         searchOptions = options;
         searchMode = string(options.localSearchMode);
         localBudget = options.localSearchFE;
-        if searchMode=="state-switch"
+        if any(searchMode==["state-switch","state-switch-global","state-switch-2opt"])
             if boundaryReached
-                searchMode="budgeted-vnd";
+                if searchMode=="state-switch-global"
+                    searchMode="global";
+                elseif searchMode=="state-switch-2opt"
+                    searchMode="2opt";
+                else
+                    searchMode="budgeted-vnd";
+                end
                 localBudget=options.intensificationFE;
             else
                 searchMode="late";

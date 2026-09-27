@@ -20,6 +20,7 @@ else
     neighborhoodOrder=string(options.neighborhoodOrder);
 end
 bestRoute=route(:)'; k=1; improvementCount=0; moves=strings(0,1);
+stats.firstFeasibleEvaluation=inf; stats.firstFeasibleRoute=[]; stats.firstFeasibleDetail=[];
 stats.twoOptFE=0; stats.swapFE=0; stats.relocateFE=0;
 stats.twoOptAccept=0; stats.swapAccept=0; stats.relocateAccept=0;
 stats.neighborhoodVisits=zeros(numel(neighborhoodOrder),1);

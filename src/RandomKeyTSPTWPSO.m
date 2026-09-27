@@ -77,9 +77,12 @@ localSearchFE = 0;
 localSearchRelocateFE = 0;
 localSearchSwapFE = 0;
 localSearchTwoOptFE = 0;
+restorationRelocateFE = 0; restorationRelocateAccept = 0;
+vndTwoOptAccept = 0; vndSwapAccept = 0; vndRelocateAccept = 0;
+phaseSwitchCost=NaN;
 iteration = 0; lastMode = "";
 boundaryReached = GlobalBest.Detail.isFeasible;
-if boundaryReached, boundaryFE=firstFeasibleFE; else, boundaryFE=inf; end
+if boundaryReached, boundaryFE=firstFeasibleFE; phaseSwitchCost=GlobalBest.Detail.tourCost; else, boundaryFE=inf; phaseSwitchCost=NaN; end
 
 while functionEvaluations<options.maxFE
     iteration = iteration+1;
@@ -117,6 +120,7 @@ while functionEvaluations<options.maxFE
         end
     end
 
+    wasBoundaryReached=boundaryReached;
     if ~boundaryReached && GlobalBest.Detail.isFeasible
         boundaryReached=true; boundaryFE=functionEvaluations;
     end
@@ -124,6 +128,7 @@ while functionEvaluations<options.maxFE
             && mod(iteration,options.localSearchEvery)==0
         remaining = options.maxFE-functionEvaluations;
         searchOptions = options;
+        phaseBeforeSearch=wasBoundaryReached;
         searchMode = string(options.localSearchMode);
         localBudget = options.localSearchFE;
         if any(searchMode==["state-switch","state-switch-global","state-switch-2opt"])
@@ -146,6 +151,9 @@ while functionEvaluations<options.maxFE
         searchOptions.mode = char(searchMode);
         searchOptions.maxFE = min(localBudget,remaining);
         routeBeforeLocal=GlobalBest.Detail.route;
+        if boundaryReached && ~phaseBeforeSearch && isnan(phaseSwitchCost)
+            phaseSwitchCost=GlobalBest.Detail.tourCost;
+        end
         if searchMode=="budgeted-vnd"
             vndOptions=searchOptions;
             vndOptions.neighborhoodOrder=["2opt","swap","relocate"];
@@ -158,6 +166,14 @@ while functionEvaluations<options.maxFE
                 searchOptions,GlobalBest.Detail);
         end
         functionEvaluations = functionEvaluations+searchStats.functionEvaluations;
+        if searchMode=="late"
+            restorationRelocateFE=restorationRelocateFE+searchStats.functionEvaluations;
+            if isfield(searchStats,'relocateAccept'), restorationRelocateAccept=restorationRelocateAccept+searchStats.relocateAccept; end
+        else
+            if isfield(searchStats,'twoOptAccept'), vndTwoOptAccept=vndTwoOptAccept+searchStats.twoOptAccept; end
+            if isfield(searchStats,'swapAccept'), vndSwapAccept=vndSwapAccept+searchStats.swapAccept; end
+            if isfield(searchStats,'relocateAccept'), vndRelocateAccept=vndRelocateAccept+searchStats.relocateAccept; end
+        end
         localSearchFE = localSearchFE+searchStats.functionEvaluations;
         if isfield(searchStats,'relocateFE'), localSearchRelocateFE=localSearchRelocateFE+searchStats.relocateFE; end
         if isfield(searchStats,'swapFE'), localSearchSwapFE=localSearchSwapFE+searchStats.swapFE; end
@@ -220,6 +236,13 @@ stats.firstFeasibleRoute = firstFeasibleRoute;
 stats.firstFeasibleDetail = firstFeasibleDetail;
 stats.boundaryReached=boundaryReached; stats.boundaryFE=boundaryFE;
 stats.phaseSwitchFE=boundaryFE;
+if isnan(phaseSwitchCost) && boundaryReached, phaseSwitchCost=GlobalBest.Detail.tourCost; end
+stats.phaseSwitchCost=phaseSwitchCost;
+if boundaryReached && isfinite(phaseSwitchCost), stats.phaseGain=phaseSwitchCost-BestSol.Detail.tourCost; else, stats.phaseGain=NaN; end
+if boundaryReached && isfinite(boundaryFE), stats.phaseGainPerFE=stats.phaseGain/max(functionEvaluations-boundaryFE,1); else, stats.phaseGainPerFE=NaN; end
+stats.restorationRelocateFE=restorationRelocateFE;
+stats.restorationRelocateAccept=restorationRelocateAccept;
+stats.vndTwoOptAccept=vndTwoOptAccept; stats.vndSwapAccept=vndSwapAccept; stats.vndRelocateAccept=vndRelocateAccept;
 stats.localSearchFE = localSearchFE;
 stats.localSearchRelocateFE = localSearchRelocateFE;
 stats.localSearchSwapFE = localSearchSwapFE;

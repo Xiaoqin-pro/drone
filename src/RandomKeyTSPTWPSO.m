@@ -211,6 +211,7 @@ while functionEvaluations<options.maxFE
                 firstFeasibleRoute = candidateRoute; firstFeasibleDetail = candidateDetail;
             end
             boundaryReached=true; boundaryFE=firstFeasibleFE;
+            if ~scheduledMode, phaseIIActive=true; end
         end
         if IsBetterSolution(candidateDetail.cost,candidateDetail, ...
                 GlobalBest.Cost,GlobalBest.Detail)
@@ -228,6 +229,7 @@ while functionEvaluations<options.maxFE
             if candidateDetail.isFeasible && isinf(firstFeasibleFE)
                 firstFeasibleFE = functionEvaluations;
                 boundaryReached=true; boundaryFE=firstFeasibleFE;
+                if ~scheduledMode, phaseIIActive=true; end
             end
         end
     end

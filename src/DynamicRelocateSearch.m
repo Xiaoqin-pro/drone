@@ -22,6 +22,7 @@ else
 end
 bestRoute=initialRoute(:)';
 stats.functionEvaluations=functionEvaluations;
+stats.firstFeasibleEvaluation=inf;
 stats.improvementCount=0;
 stats.priorityFE=0;
 stats.globalFE=0;
@@ -52,6 +53,9 @@ for k=1:numel(candidateRoutes)
     if functionEvaluations>=maxFE, break; end
     [candidateCost,candidateDetail]=EvaluateSchedule(candidateRoutes{k},model,cache);
     functionEvaluations=functionEvaluations+1;
+    if isinf(stats.firstFeasibleEvaluation) && candidateDetail.isFeasible
+        stats.firstFeasibleEvaluation=functionEvaluations;
+    end
     if candidatePriority(k), stats.priorityFE=stats.priorityFE+1; else, stats.globalFE=stats.globalFE+1; end
     if IsBetterDynamicSolution(candidateCost,candidateDetail,bestCost,bestDetail)
         bestRoute=candidateRoutes{k};
@@ -80,7 +84,7 @@ function [sourceOrder,sourceScores]=BuildSourceOrder(route,options)
 n=numel(route);
 sourceScores=zeros(1,n);
 mode=lower(string(options.mode));
-if mode=="impact-relocate" || mode=="feasibility-relocate"
+if mode=="impact-relocate" || mode=="feasibility-relocate" || mode=="late-relocate"
     for k=1:n
         idx=find(options.impactIDs==route(k),1);
         if ~isempty(idx) && idx<=numel(options.impactScores)
@@ -92,8 +96,13 @@ if mode=="impact-relocate" || mode=="feasibility-relocate"
     end
     normalized=sourceScores/max(sum(sourceScores),eps);
     weights=(1-options.impactAlpha)/n+options.impactAlpha*normalized;
-    keys=-log(max(rand(1,n),eps))./max(weights,eps);
-    [~,sourceOrder]=sort(keys,'ascend');
+    if mode=="late-relocate"
+        [~,sourceOrder]=sortrows([-sourceScores(:),rand(n,1)],[1 2]);
+        sourceOrder=sourceOrder(:)';
+    else
+        keys=-log(max(rand(1,n),eps))./max(weights,eps);
+        [~,sourceOrder]=sort(keys,'ascend');
+    end
 else
     sourceOrder=randperm(n);
     sourceScores(:)=0;

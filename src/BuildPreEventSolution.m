@@ -1,7 +1,12 @@
-function [solution,model,cache] = BuildPreEventSolution
+function [solution,model,cache] = BuildPreEventSolution(mode)
 %BUILDPREEVENTSOLUTION 重建动态基准生成时使用的事件前旧计划
-model=CreateModel();
-model.windows(:,2)=model.windows(:,2)+300;
+if nargin<1 || isempty(mode), mode='legacy'; end
+model=CreateModel(mode);
+if strcmpi(mode,'local-terrain')
+    model.windows(:,2)=model.windows(:,2)+3000;
+else
+    model.windows(:,2)=model.windows(:,2)+300;
+end
 model.cfg.silent=true;
 activeIDs=model.customerIDs(:)';
 cache=BuildLegCache(model,activeIDs,model.homePosition);

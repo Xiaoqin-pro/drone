@@ -15,6 +15,7 @@ if ~isfield(options,'neighborhoodOrder')||isempty(options.neighborhoodOrder)
 end
 bestRoute=route(:)'; k=1;
 stats.functionEvaluations=functionEvaluations; stats.improvementCount=0;
+stats.firstFeasibleEvaluation=inf;
 stats.twoOptFE=0; stats.swapFE=0; stats.relocateFE=0;
 stats.twoOptAccept=0; stats.swapAccept=0; stats.relocateAccept=0;
 stats.neighborhoodVisits=zeros(numel(options.neighborhoodOrder),1);
@@ -28,6 +29,9 @@ while k<=numel(options.neighborhoodOrder) && functionEvaluations<maxFE
         if functionEvaluations>=maxFE, break; end
         [candidateCost,candidateDetail]=EvaluateSchedule(candidates{q},model,cache);
         functionEvaluations=functionEvaluations+1; stats=AddFE(stats,neighborhood);
+        if isinf(stats.firstFeasibleEvaluation) && candidateDetail.isFeasible
+            stats.firstFeasibleEvaluation=functionEvaluations;
+        end
         if IsBetterDynamicSolution(candidateCost,candidateDetail,localCost,localDetail)
             localRoute=candidates{q}; localDetail=candidateDetail; localCost=candidateCost; improved=true;
         end

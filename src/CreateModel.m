@@ -1,5 +1,6 @@
-function model = CreateModel()
-%CREATEMODEL 创建20客户的自主三维山地和障碍物场景
+function model = CreateModel(mode)
+%CREATEMODEL 创建20客户自主三维山地；可选 mode='local-terrain'
+if nargin<1 || isempty(mode), mode='legacy'; end
 %   本文件不读取论文地图；地形和任务均为自主仿真数据。
 
 %% 三维程序化山地
@@ -91,6 +92,11 @@ model.latePenalty = 100;
 model.terrainPenalty = 5000;
 model.obstaclePenalty = 15000;
 model.smoothPenalty = 1.5;
+if strcmpi(mode,'local-terrain')
+    model.cfg.localTerrainMode=true;
+    model.maxWaypointLift=400;
+    model=UpdateLocalCruiseAltitudes(model);
+end
 end
 
 function field = CreateRandomField(X,Y,nx,ny)

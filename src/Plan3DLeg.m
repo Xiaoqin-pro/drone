@@ -12,19 +12,33 @@ end
 
 offsetList = [0 -0.25 0.25 -0.50 0.50 -0.75 0.75];
 liftList = [0 40 80 120 160 200];
+localTerrainMode=isfield(model,'cfg') && isfield(model.cfg,'localTerrainMode') && model.cfg.localTerrainMode;
+if localTerrainMode, liftList=0:40:max(200,model.maxWaypointLift); end
 candidates = cell(0,1);
 candidates{end+1} = [from;to]; %#ok<AGROW>
 
 for offset = offsetList(2:end)
     for lift = liftList
-        p1 = from+(to-from)/3;
-        p2 = from+2*(to-from)/3;
         lateralOffset = offset*xyLength*perpendicular;
-        p1(1:2) = ClampXY(p1(1:2)+lateralOffset,model);
-        p2(1:2) = ClampXY(p2(1:2)+lateralOffset,model);
-        p1(3) = p1(3)+lift;
-        p2(3) = p2(3)+lift;
-        candidates{end+1} = [from;p1;p2;to]; %#ok<AGROW>
+        if localTerrainMode
+            fractions=[0.20 0.40 0.60 0.80];
+            intermediate=zeros(numel(fractions),3);
+            for h=1:numel(fractions)
+                point=from+fractions(h)*(to-from);
+                point(1:2)=ClampXY(point(1:2)+lateralOffset,model);
+                point(3)=point(3)+lift;
+                intermediate(h,:)=point;
+            end
+            candidates{end+1}=[from;intermediate;to]; %#ok<AGROW>
+        else
+            p1 = from+(to-from)/3;
+            p2 = from+2*(to-from)/3;
+            p1(1:2) = ClampXY(p1(1:2)+lateralOffset,model);
+            p2(1:2) = ClampXY(p2(1:2)+lateralOffset,model);
+            p1(3) = p1(3)+lift;
+            p2(3) = p2(3)+lift;
+            candidates{end+1} = [from;p1;p2;to]; %#ok<AGROW>
+        end
     end
 end
 

@@ -35,9 +35,14 @@ for i=1:height(manifest)
                 first=stats.firstFeasibleFE; if isinf(first), first=NaN; end
                 if best.Detail.isFeasible, gap=(best.Detail.tourCost-refCost)/refCost; else, gap=NaN; end
                 mode=""; if isfield(history,'Mode'), mode=history.Mode(idx); end
+                if isfield(stats,'phaseSwitchFE'), phaseSwitchFE=stats.phaseSwitchFE; else, phaseSwitchFE=NaN; end
+                if isfield(stats,'localSearchTwoOptFE'), vnd2optFE=stats.localSearchTwoOptFE; else, vnd2optFE=0; end
+                if isfield(stats,'localSearchSwapFE'), vndSwapFE=stats.localSearchSwapFE; else, vndSwapFE=0; end
+                if isfield(stats,'localSearchRelocateFE'), vndRelocateFE=stats.localSearchRelocateFE; else, vndRelocateFE=0; end
                 rows{end+1,1}={manifest.name(i),instance.nCustomers,methods(m), ...
                     seed,budgetFactor,budget,history.FE(idx),history.Late(idx), ...
-                    history.IsFeasible(idx),first,best.Detail.tourCost,gap,mode}; %#ok<AGROW>
+                    history.IsFeasible(idx),first,phaseSwitchFE,best.Detail.tourCost,gap, ...
+                    mode,vnd2optFE,vndSwapFE,vndRelocateFE}; %#ok<AGROW>
             end
         end
     end
@@ -45,8 +50,8 @@ for i=1:height(manifest)
 end
 summary=cell2table(vertcat(rows{:}),'VariableNames',{ ...
     'instance','nCustomers','method','seed','budget_factor','budget_fe', ...
-    'actual_fe','total_late','is_feasible','first_feasible_fe','tour_cost', ...
-    'gap_to_bks','mode'});
+    'actual_fe','total_late','is_feasible','first_feasible_fe','phase_switch_fe', ...
+    'tour_cost','gap_to_bks','mode','vnd_2opt_fe','vnd_swap_fe','vnd_relocate_fe'});
 results.summary=summary; results.methods=methods; results.budgetsFactor=budgetsFactor;
 writetable(summary,fullfile(root,'results','core_mechanism_freeze_tsptw_summary.csv'));
 save(fullfile(root,'results','core_mechanism_freeze_tsptw_result.mat'),'results');

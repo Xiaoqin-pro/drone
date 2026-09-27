@@ -78,7 +78,8 @@ localSearchRelocateFE = 0;
 localSearchSwapFE = 0;
 localSearchTwoOptFE = 0;
 iteration = 0; lastMode = "";
-boundaryReached = GlobalBest.Detail.isFeasible; boundaryFE = inf;
+boundaryReached = GlobalBest.Detail.isFeasible;
+if boundaryReached, boundaryFE=firstFeasibleFE; else, boundaryFE=inf; end
 
 while functionEvaluations<options.maxFE
     iteration = iteration+1;
@@ -218,6 +219,7 @@ stats.firstFeasibleFE = firstFeasibleFE;
 stats.firstFeasibleRoute = firstFeasibleRoute;
 stats.firstFeasibleDetail = firstFeasibleDetail;
 stats.boundaryReached=boundaryReached; stats.boundaryFE=boundaryFE;
+stats.phaseSwitchFE=boundaryFE;
 stats.localSearchFE = localSearchFE;
 stats.localSearchRelocateFE = localSearchRelocateFE;
 stats.localSearchSwapFE = localSearchSwapFE;

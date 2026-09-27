@@ -421,6 +421,33 @@ src/BudgetedVND.m
 
 这一步解决了此前StateSwitch在不可行阶段提前消耗 `3(n-1)` 局部FE的问题。可行前和可行后的局部搜索预算现在分开管理。
 
+## Boundary VND 机制筛选结果
+
+新增正式筛选入口：
+
+```matlab
+RunBoundaryVNDMechanismSelection
+```
+
+当前使用9个SPB实例：
+
+```text
+相对容易：rc_201.1、rc_208.3
+中等/过渡：rc_201.2、rc_201.3、rc_202.1、rc_202.3、rc_204.2、rc_207.3
+恢复压力：rc_204.1
+```
+
+比较：
+
+```text
+LateOnly
+LateToGlobal
+LateTo2Opt
+LateToVND
+```
+
+当前结果显示，在100n预算下，LateToVND在整体筛选集上具有较好的最终Gap趋势，尤其在rc_204.2和rc_208.3上更明显；但不同实例之间仍存在差异，因此下一步先冻结这组机制筛选结果，再加入hard-feasible/phase-transition实例，而不是继续添加新算法模块。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

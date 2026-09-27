@@ -249,7 +249,7 @@ stats.phaseSwitchFE=phaseSwitchFE;
 if isnan(phaseSwitchCost) && boundaryReached, phaseSwitchCost=GlobalBest.Detail.tourCost; phaseSwitchFE=functionEvaluations; end
 stats.phaseSwitchCost=phaseSwitchCost;
 if boundaryReached && isfinite(phaseSwitchCost), stats.phaseGain=phaseSwitchCost-BestSol.Detail.tourCost; else, stats.phaseGain=NaN; end
-if boundaryReached && isfinite(boundaryFE), stats.phaseGainPerFE=stats.phaseGain/max(functionEvaluations-boundaryFE,1); else, stats.phaseGainPerFE=NaN; end
+if boundaryReached && isfinite(boundaryFE), stats.phaseGainPerFE=stats.phaseGain/max(functionEvaluations-phaseSwitchFE,1); else, stats.phaseGainPerFE=NaN; end
 stats.restorationRelocateFE=restorationRelocateFE;
 stats.restorationRelocateAccept=restorationRelocateAccept;
 stats.vndTwoOptAccept=vndTwoOptAccept; stats.vndSwapAccept=vndSwapAccept; stats.vndRelocateAccept=vndRelocateAccept;

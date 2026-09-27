@@ -519,6 +519,25 @@ Swap仍停滞：升级到Relocate
 
 当前结果显示Progressive在部分过渡实例上有优势，但9个SPB实例总体仍未稳定超过顺序BudgetedVND。因此暂时保留BudgetedVND作为主候选，Progressive和Competitive作为机制审计结果，不再继续增加Phase-II结构。
 
+## VND Contribution Summary
+
+新增：
+
+```matlab
+BuildVNDContributionSummary
+```
+
+该脚本汇总已有实验，不重新运行算法，输出：
+
+```text
+2-opt / Swap / Relocate参与率
+多邻域同时产生接受改善的运行比例
+各邻域平均接受次数
+公平Fork中VND/Competitive相对Repeated2Opt的win/tie/loss
+```
+
+同时修正了 `phaseGainPerFE` 的分母，使其使用 `phaseSwitchFE` 而不是Boundary事件FE。
+
 ## 结果说明
 
 动态基线结果保存在 `results`，包括：

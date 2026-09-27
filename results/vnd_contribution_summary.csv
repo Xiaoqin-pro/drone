@@ -1,0 +1,4 @@
+source,method,n_runs,twoOpt_participation,swap_participation,relocate_participation,multi_operator_run_fraction,mean_accepted_moves,wins_vs_repeated2opt,ties_vs_repeated2opt,losses_vs_repeated2opt
+integrated,LateToVND,90,0.4,0.411111111111111,0.333333333333333,0.4,4.22222222222222,NaN,NaN,NaN
+fork-v2,BudgetedVND,42,NaN,NaN,NaN,NaN,NaN,18,24,0
+fork-v2,Competitive,42,NaN,NaN,NaN,NaN,NaN,22,12,8
